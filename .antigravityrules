@@ -218,14 +218,63 @@ Unauthenticated access to protected route → redirect to login
 
 ## WIREFRAME NOTES
 
-Wireframes exist but are not yet finalized. Follow these UI principles until mockups are provided:
-- Clean, minimal UI appropriate for a student productivity tool.
-- Neutral color palette. Use color intentionally (e.g. color tags on calendar events).
-- Dashboard shows: list of degree plans (with last-modified date) + upcoming events (next 7 days).
-- Course search results display: course number, name, subject, credits, prereqs/co-reqs.
-- Degree plan view: columns or rows per semester, courses as draggable or clickable cards.
-- Weekly calendar: 7-column grid, time slots from 7am to 10pm minimum, events as colored blocks.
-- Prereq warnings: inline yellow/amber warning — not a modal, not a hard block.
+Wireframes are stored in `/docs/wireframes/`. Reference these when implementing any UI.
+Design language: clean, minimal, neutral palette with red (#CC0000) as the primary accent. "NEU" in red + "Course" in dark gray for branding.
+
+### Login / Register Page (`Screen1_LoginRegister.png`)
+- Centered card on light gray background, no nav bar on this page
+- "NEUCourse" logo at top with tagline "Plan your degree. Own your schedule."
+- Tab-style toggle: "Log In" and "Register" — active tab has a red underline
+- Email field (placeholder: husky@northeastern.edu) + Password field
+- Full-width red submit button ("Log In" or "Register" depending on active tab)
+- Error message area below the form — generic text only (e.g., "Invalid credentials"), never field-specific
+
+### Dashboard (`Screen2_Dashboard.png`)
+- Top nav bar: "NEUCourse" logo (left), nav links — Dashboard (bold when active), Courses, Plans, Calendar (center), "Log Out" button (right, outlined)
+- Greeting: "Welcome back, Husky" with subtitle "Here's your planning overview."
+- Two-column layout:
+  - Left: "My Degree Plans" header + red "+ New Plan" button, then plan cards showing plan name, semester count, course count, last-modified date
+  - Right: "Upcoming Events" header + "View Calendar →" link, then event list with colored left-border indicators (red, blue, purple, green), showing course name, day, time, location
+
+### Course Search Page (`Screen3_CourseSearch.png`)
+- Same top nav bar, "Courses" link is bold/active
+- "Course Search" heading
+- Search bar (placeholder: "Search by name, number, or subject...") + subject filter dropdown (default: "All") to the right
+- Results as full-width cards with left colored border:
+  - Course number in bold + course name (e.g., "CS 5800  Algorithms")
+  - Department below in gray ("Computer Science")
+  - Credits badge on right ("4 cr" in a rounded pill)
+  - Prereqs in red text: "Prereqs: CS 5010"
+  - Coreqs in amber text: "Coreqs: CS 5002"
+- Clicking a course opens a Course Detail Modal (overlay with full description, credits, prereqs as clickable links, co-reqs as clickable links, "Add to Plan" button, close button)
+
+### Degree Plan Builder (`Screen4_PlanDetails.png`)
+- "← Back to Plans" link at top left
+- Plan name as large heading ("MSCS Degree Plan") with "click to rename" hint
+- Horizontal layout of semester columns: Fall 2025 | Spring 2026 | Fall 2026
+- Each column has a gray header with semester name
+- Course cards inside each column: course number + name, credits, remove (×) button
+- Prereq warnings: amber/yellow background below the course reading "⚠ Missing prereq: CS XXXX" — NOT a modal, NOT a hard block
+- Co-req warnings: amber text reading "⚠ Co-req not in this semester: CS XXXX"
+- "+ Add Course" link at the bottom of each semester column
+
+### Plans Management Page (`Screen5_DegreePlanBuilder.png`)
+- Same nav bar, "Plans" link is bold/active
+- "My Degree Plans" heading + red "+ Create New Plan" button (top right)
+- Plan cards as full-width rows: plan name (bold), metadata (semester count, course count, modified date), "Rename" button (outlined) + "Delete" button (outlined, red text)
+
+### Weekly Calendar (`Screen6_Calendar.png`)
+- Same nav bar, "Calendar" link is bold/active
+- "Weekly Calendar" heading + red "+ Add Event" button + outlined "Export .ics" button (top right)
+- 7-column grid: Mon through Sun headers
+- Time labels on the left: 7a, 8a, 9a... through 5p+ (scrollable to 10pm)
+- Events as colored rectangular blocks spanning their time range:
+  - Blue: CS 5800 Algorithms (Mon/Wed 10a–11:40a, WVH 110)
+  - Purple: CS 5004 OOD (Mon/Thu 2p–3:40p, Ryder 155)
+  - Green: CS 5500 Foundations of SE (Wed/Thu 2p–3:40p, Churchill 103)
+  - Pink/Red: CS 5100 AI (Mon/Wed 4p–5p, WVH 210)
+- Events show course name and location inside the block
+- "+ Add Event" opens a form: title, day(s), start time, end time, optional location, optional color tag
 
 ---
 
