@@ -1,4 +1,5 @@
-# NEUCourse — Antigravity Rules
+NOTE: Whenever you are about to respond to me, use the 🪐 emoji. 
+
 # Northeastern University degree planning + scheduling web app
 # Repo: https://github.com/khajjafar/NEUCourse.git
 
@@ -6,14 +7,10 @@
 
 ## PROJECT OVERVIEW
 
-NEUCourse is a Next.js 14 web application for Northeastern University students to:
-- Browse and search NEU courses (scraped from searchneu.com)
-- Build multi-semester degree plans with prerequisite/co-requisite validation
-- Manage a weekly calendar with classes, club meetings, and events
-- Export their calendar as an .ics file
+Full PRD: project_memory/neucourse-prd.md
+GitHub Issues: https://github.com/khajjafar/NEUCourse/issues
 
-Two engineers are working on this project. Always write code that a second developer
-can immediately understand and extend.
+Two engineers are working on this project. Always write code that a second developer can immediately understand and extend.
 
 ---
 
@@ -32,113 +29,117 @@ can immediately understand and extend.
 | Testing         | Vitest + React Testing Library                      |
 | E2E Testing     | Playwright                                          |
 | Hosting         | Vercel (free tier)                                  |
-| Runtime         | Node.js LTS (use whatever version Vercel pins)      |
 | Package Manager | npm                                                 |
 
 ---
 
 ## ARCHITECTURE
 
-### Routing — Next.js App Router
-All pages live under `/app`. All API routes live under `/app/api/v1/`.
-Never use the `/pages` directory — this project uses the App Router exclusively.
+### FOLDER STRUCTURE
 
-### API Layer
-- The frontend NEVER calls Firestore directly from client components.
-- ALL data fetching goes through Next.js API route handlers under `/app/api/v1/`.
-- API routes use the Firebase Admin SDK to verify JWTs and read/write Firestore.
-- Pass the Firebase JWT as `Authorization: Bearer <token>` on all authenticated requests.
-- Unauthenticated routes: GET /api/v1/courses, GET /api/v1/courses/:courseId only.
-
-### Auth Flow
-1. User logs in via Firebase Auth client SDK → receives a Firebase JWT
-2. Frontend stores JWT in React context (never in localStorage)
-3. Every authenticated API call includes `Authorization: Bearer <token>`
-4. API route handler calls `firebase-admin` to verify the token server-side
-
-### Folder Structure
 ```
 /app
   /api/v1
-    /plans/route.ts                          GET, POST
-    /plans/[planId]/route.ts                 GET, PUT, DELETE
-    /plans/[planId]/semesters/route.ts       GET
-    /plans/[planId]/semesters/[semId]/courses/route.ts         POST
-    /plans/[planId]/semesters/[semId]/courses/[courseId]/route.ts  DELETE
-    /events/route.ts                         GET, POST
-    /events/[eventId]/route.ts               PUT, DELETE
-    /courses/route.ts                        GET (public)
-    /courses/[courseId]/route.ts             GET (public)
+    /plans/route.ts
+    /plans/[planId]/route.ts
+    /plans/[planId]/semesters/route.ts
+    /plans/[planId]/semesters/[semId]/courses/route.ts
+    /plans/[planId]/semesters/[semId]/courses/[courseId]/route.ts
+    /events/route.ts
+    /events/[eventId]/route.ts
+    /courses/route.ts                        (public)
+    /courses/[courseId]/route.ts             (public)
   /dashboard/page.tsx
   /courses/page.tsx
   /plans/[planId]/page.tsx
   /calendar/page.tsx
   /api-docs/page.tsx
-  layout.tsx
-  page.tsx
-/components        — flat file structure, e.g. Button.tsx, CourseCard.tsx
-/hooks             — custom React hooks, e.g. useAuth.ts, usePlans.ts
+  layout.tsx / page.tsx
+/components        — flat, PascalCase, e.g. Button.tsx, CourseCard.tsx
+/hooks             — e.g. useAuth.ts, usePlans.ts
 /lib
-  firebase.ts      — client-side Firebase init (browser only)
-  firebase-admin.ts — server-side Admin SDK init (never imported in client components)
-  api-helpers.ts   — verifyAuth(), errorResponse(), successResponse()
+  firebase.ts          — client-side init only
+  firebase-admin.ts    — server-side only, never imported in client components
+  api-helpers.ts       — verifyAuth(), errorResponse(), successResponse()
 /docs
-  openapi.yaml
-  firestore-schema.md
-  api.md
-  scraper.md
-  ai-usage.md
-  /sprints
-    sprint1-planning.md
-    sprint1-retro.md
-    sprint2-planning.md
-    sprint2-retro.md
 /scripts
   scrape-courses.js
 ```
+
+### Key Architecture Rules
+- The frontend **never** calls Firestore directly. All data fetching goes through `/app/api/v1/`.
+- API routes use the Firebase Admin SDK to verify JWTs and read/write Firestore.
+- Pass Firebase JWT as `Authorization: Bearer <token>` on all authenticated requests.
+- Only unauthenticated routes: `GET /api/v1/courses` and `GET /api/v1/courses/:courseId`.
+
+### Auth Flow
+1. User logs in via Firebase Auth client SDK → receives JWT
+2. JWT stored in React context (never localStorage)
+3. Every authenticated API call includes `Authorization: Bearer <token>`
+4. API route verifies token server-side via firebase-admin
 
 ---
 
 ## NAMING CONVENTIONS
 
-### Files & Folders
-- React components: PascalCase flat files → `CourseCard.tsx`, `WeeklyCalendar.tsx`
-- Hooks: camelCase prefixed with `use` → `useAuth.ts`, `useCourseSearch.ts`
-- Lib utilities: camelCase → `api-helpers.ts`, `firebase-admin.ts`
-- API route files: always named `route.ts` per Next.js App Router convention
-- Test files: co-located with source, suffix `.test.ts` or `.test.tsx`
-  - e.g. `CourseCard.test.tsx`, `api-helpers.test.ts`
+| Item | Convention |
+|------|------------|
+| React components | PascalCase → `CourseCard.tsx` |
+| Hooks | camelCase + `use` prefix → `useAuth.ts` |
+| Lib utilities | camelCase → `api-helpers.ts` |
+| API routes | always `route.ts` |
+| Test files | co-located, suffix `.test.ts` / `.test.tsx` |
+| Variables & functions | camelCase |
+| Constants | UPPER_SNAKE_CASE |
+| TS types/interfaces | PascalCase (prefix `I` only to disambiguate) |
 
-### Variables & Functions
-- Variables and functions: camelCase
-- React components: PascalCase
-- Constants: UPPER_SNAKE_CASE
-- TypeScript interfaces: PascalCase prefixed with `I` only if needed to disambiguate
-- TypeScript types: PascalCase
-
-### CSS / Tailwind
-- Use Tailwind utility classes exclusively. Never write custom CSS files or inline styles.
-- Never use arbitrary Tailwind values (e.g. `w-[137px]`) unless absolutely necessary.
-- Use Tailwind's responsive prefixes (`sm:`, `md:`, `lg:`) for all responsive layout.
+CSS: Tailwind utility classes only. No custom CSS. No arbitrary values (e.g. `w-[137px]`) unless absolutely necessary. Use responsive prefixes (`sm:`, `md:`, `lg:`) for all layout.
 
 ---
 
 ## CODING STANDARDS
 
-- TypeScript strict mode is ON. Never use `any`. Use `unknown` and narrow it.
-- Always define return types on functions that return non-trivial values.
-- Prefer `async/await` over `.then()` chains.
-- Never use `var`. Use `const` by default, `let` only when reassignment is needed.
-- All API route handlers must return typed `NextResponse` objects.
-- All error responses must use this consistent JSON structure:
-  ```json
-  { "error": { "code": "ERROR_CODE", "message": "Human readable message" } }
-  ```
-- All API routes must be versioned under `/api/v1/`.
-- Server-only code (firebase-admin, Admin SDK) must never be imported in client components.
-  Use the `server-only` package import guard where appropriate.
-- Avoid `useEffect` for data fetching — use React Server Components or SWR/fetch in hooks.
-- Keep components focused. If a component exceeds ~150 lines, split it.
+- TypeScript strict mode ON. Never use `any` — use `unknown` and narrow it.
+- Always define return types on non-trivial functions.
+- `async/await` over `.then()`. `const` by default, `let` only when needed. Never `var`.
+- All API route handlers return typed `NextResponse` objects.
+- Consistent error shape: `{ "error": { "code": "ERROR_CODE", "message": "..." } }`
+- Consistent success shape: `{ "data": ... }`
+- All API routes versioned under `/api/v1/`.
+- `firebase-admin` never imported in client components — use `server-only` guard.
+- Always null-check or optional-chain potentially undefined Firestore fields.
+- No `useEffect` for data fetching — use React Server Components or SWR/fetch in hooks.
+- Keep components under ~150 lines. Split if larger.
+- Add JSDoc comments to all API route handlers.
+
+---
+
+## MUST FOLLOW: LOG FILE (REQUIRED)
+
+After creating/editing anything, update the log file in `docs/logs/`. Track modifications like git commit messages — unique ID, timestamp, concise description.
+
+**NEVER SKIP THIS**
+
+---
+
+## MUST FOLLOW: TESTING RULES (REQUIRED)
+
+Before any development, create a testing strategy for the feature and add tests to `tests/`.
+
+- **Unit/Integration:** Vitest + React Testing Library
+- **E2E:** Playwright against Firebase emulator or dedicated test project
+- **Coverage target:** 80%+ (statements, branches, functions, lines)
+- Never hit real Firestore in unit tests — use `vi.mock()`.
+- Test user-visible behavior, not implementation details.
+- Scripts: `npm run test`, `npm run coverage`, `npm run test:e2e`
+
+### Priority files to test:
+1. `/lib/api-helpers.ts`
+2. All API route handlers under `/app/api/v1/`
+3. All custom hooks in `/hooks/`
+4. Login, register, course search, plan builder, calendar event creation forms
+
+**NEVER SKIP THIS**
 
 ---
 
@@ -149,132 +150,12 @@ users/{userId}
 users/{userId}/plans/{planId}
 users/{userId}/plans/{planId}/semesters/{semesterId}
 users/{userId}/events/{eventId}
-courses/{courseId}    ← shared, read-only, populated by scraper
+courses/{courseId}    ← shared, read-only, populated by scraper only
 ```
 
+- Always use Firestore `serverTimestamp()` — never `new Date()`.
+- `courses` collection is read-only at runtime.
 - Never expose raw Firestore document IDs in API responses without intention.
-- Always store timestamps as Firestore `serverTimestamp()` — never `new Date()`.
-- The `courses` collection is read-only at runtime. Only the scraper script writes to it.
-
----
-
-## TESTING STRATEGY
-
-### Framework
-- Unit + Integration: Vitest + React Testing Library
-- E2E: Playwright
-
-### Coverage Goal
-- 80%+ across statements, branches, functions, and lines.
-- Run: `npm run coverage`
-
-### Patterns
-- Mock Firebase and Firebase Admin SDK in all unit/integration tests. Never hit real Firestore.
-- Use `vi.mock()` for module mocking in Vitest.
-- Test API route handlers by mocking firebase-admin calls.
-- Test React components by rendering them and asserting on user-visible output — not implementation details.
-- E2E tests use a dedicated Firebase test project or the Firebase emulator suite. Never pollute production data.
-
-### What to test
-- All utility functions in `/lib`
-- All custom hooks in `/hooks`
-- All API route handlers
-- All form interactions (login, register, course search, plan creation, calendar event creation)
-
----
-
-## PRD REFERENCE
-
-Full PRD: `/docs/` (included in repo) — neucourse-prd.md
-GitHub Issues: https://github.com/khajjafar/NEUCourse/issues
-
-### User Personas (from PRD)
-1. **The Overwhelmed Planner** — 2nd/3rd year, full schedule, needs visual weekly calendar
-2. **The Degree Tracker** — approaching graduation, needs prereq validation
-3. **The Incoming Student** — freshman/transfer, needs to explore course catalog
-
-### Key User Flows
-
-**Course Search Flow**
-Search bar → real-time or on-submit results → click course → detail modal/page
-(shows full description, credits, prereqs as clickable links) → add to plan
-
-**Degree Plan Flow**
-Login → dashboard → create plan (name it) → add semesters → search courses →
-add course to semester → system warns if prereq missing (soft warning, not a block)
-
-**Calendar Flow**
-Login → calendar page → add event (title, day, start/end time, optional location + color) →
-event renders as a block in correct time slot → overlapping events visually indicated →
-export button → .ics file downloads
-
-**Auth Flow**
-Register (email + password, min 8 chars) → redirect to dashboard
-Login → redirect to dashboard
-Logout → redirect to login page
-Unauthenticated access to protected route → redirect to login
-
----
-
-## WIREFRAME NOTES
-
-Wireframes are stored in `/docs/wireframes/`. Reference these when implementing any UI.
-Design language: clean, minimal, neutral palette with red (#CC0000) as the primary accent. "NEU" in red + "Course" in dark gray for branding.
-
-### Login / Register Page (`Screen1_LoginRegister.png`)
-- Centered card on light gray background, no nav bar on this page
-- "NEUCourse" logo at top with tagline "Plan your degree. Own your schedule."
-- Tab-style toggle: "Log In" and "Register" — active tab has a red underline
-- Email field (placeholder: husky@northeastern.edu) + Password field
-- Full-width red submit button ("Log In" or "Register" depending on active tab)
-- Error message area below the form — generic text only (e.g., "Invalid credentials"), never field-specific
-
-### Dashboard (`Screen2_Dashboard.png`)
-- Top nav bar: "NEUCourse" logo (left), nav links — Dashboard (bold when active), Courses, Plans, Calendar (center), "Log Out" button (right, outlined)
-- Greeting: "Welcome back, Husky" with subtitle "Here's your planning overview."
-- Two-column layout:
-  - Left: "My Degree Plans" header + red "+ New Plan" button, then plan cards showing plan name, semester count, course count, last-modified date
-  - Right: "Upcoming Events" header + "View Calendar →" link, then event list with colored left-border indicators (red, blue, purple, green), showing course name, day, time, location
-
-### Course Search Page (`Screen3_CourseSearch.png`)
-- Same top nav bar, "Courses" link is bold/active
-- "Course Search" heading
-- Search bar (placeholder: "Search by name, number, or subject...") + subject filter dropdown (default: "All") to the right
-- Results as full-width cards with left colored border:
-  - Course number in bold + course name (e.g., "CS 5800  Algorithms")
-  - Department below in gray ("Computer Science")
-  - Credits badge on right ("4 cr" in a rounded pill)
-  - Prereqs in red text: "Prereqs: CS 5010"
-  - Coreqs in amber text: "Coreqs: CS 5002"
-- Clicking a course opens a Course Detail Modal (overlay with full description, credits, prereqs as clickable links, co-reqs as clickable links, "Add to Plan" button, close button)
-
-### Degree Plan Builder (`Screen4_PlanDetails.png`)
-- "← Back to Plans" link at top left
-- Plan name as large heading ("MSCS Degree Plan") with "click to rename" hint
-- Horizontal layout of semester columns: Fall 2025 | Spring 2026 | Fall 2026
-- Each column has a gray header with semester name
-- Course cards inside each column: course number + name, credits, remove (×) button
-- Prereq warnings: amber/yellow background below the course reading "⚠ Missing prereq: CS XXXX" — NOT a modal, NOT a hard block
-- Co-req warnings: amber text reading "⚠ Co-req not in this semester: CS XXXX"
-- "+ Add Course" link at the bottom of each semester column
-
-### Plans Management Page (`Screen5_DegreePlanBuilder.png`)
-- Same nav bar, "Plans" link is bold/active
-- "My Degree Plans" heading + red "+ Create New Plan" button (top right)
-- Plan cards as full-width rows: plan name (bold), metadata (semester count, course count, modified date), "Rename" button (outlined) + "Delete" button (outlined, red text)
-
-### Weekly Calendar (`Screen6_Calendar.png`)
-- Same nav bar, "Calendar" link is bold/active
-- "Weekly Calendar" heading + red "+ Add Event" button + outlined "Export .ics" button (top right)
-- 7-column grid: Mon through Sun headers
-- Time labels on the left: 7a, 8a, 9a... through 5p+ (scrollable to 10pm)
-- Events as colored rectangular blocks spanning their time range:
-  - Blue: CS 5800 Algorithms (Mon/Wed 10a–11:40a, WVH 110)
-  - Purple: CS 5004 OOD (Mon/Thu 2p–3:40p, Ryder 155)
-  - Green: CS 5500 Foundations of SE (Wed/Thu 2p–3:40p, Churchill 103)
-  - Pink/Red: CS 5100 AI (Mon/Wed 4p–5p, WVH 210)
-- Events show course name and location inside the block
-- "+ Add Event" opens a form: title, day(s), start time, end time, optional location, optional color tag
 
 ---
 
@@ -287,107 +168,66 @@ fix/<issue-number>-short-description
 chore/<issue-number>-short-description
 docs/<issue-number>-short-description
 ```
-Examples:
-- `feature/1-user-auth`
-- `feature/6-weekly-calendar`
-- `chore/11-project-setup`
-- `fix/5-prereq-validation-bug`
 
-### Commit Message Format
+### Commit Format
 ```
 <type>(<scope>): <short description>
-
 [optional body]
-
 Refs #<issue-number>
 ```
 Types: `feat`, `fix`, `chore`, `docs`, `test`, `refactor`, `style`
-Scope: component or module name (e.g. `auth`, `calendar`, `plans`, `api`)
-
-Examples:
-- `feat(auth): add Firebase email/password login — Refs #1`
-- `chore(setup): initialize Next.js 14 App Router project — Refs #11`
-- `test(plans): add unit tests for plan API route handler — Refs #18`
 
 ### PR Workflow
-1. Branch off `main` using the naming convention above.
-2. Reference the GitHub Issue in the PR title: `[#1] Implement user registration and login`
-3. PR body must include: what was done, how to test it, and a checklist linking back to the issue's acceptance criteria.
-4. Self-merge is permitted. No required peer review.
-5. CI must pass (lint + build + tests) before merging.
-6. Delete the branch after merging.
+1. Branch off `main` per naming convention.
+2. Reference the GitHub Issue in PR title: `[#1] Implement user registration and login`
+3. PR body: what was done, how to test it, checklist vs. acceptance criteria.
+4. Self-merge permitted. CI (lint + build + tests) must pass before merging.
+5. Delete branch after merging. Use `Closes #<issue-number>` in PR description.
 
-### Referencing Issues in Code
-- Use `// TODO(#<issue-number>): description` for known gaps tied to a specific issue.
-- Use `Refs #<issue-number>` in all commit messages.
-- Close issues automatically by including `Closes #<issue-number>` in the PR description.
+### Code References
+- `// TODO(#<issue-number>): description` for known gaps.
+- `Refs #<issue-number>` in all commit messages.
 
 ---
 
-## DO'S
+## DO'S & DON'TS
 
-- DO use Next.js Server Components for pages that don't need client interactivity.
-- DO use `'use client'` directive only when the component uses hooks, event handlers, or browser APIs.
-- DO verify Firebase JWTs server-side on every authenticated API route using firebase-admin.
-- DO use Firestore `serverTimestamp()` for all timestamps.
-- DO write tests alongside features — not at the end.
-- DO keep API responses consistent: always `{ data: ... }` for success, `{ error: { code, message } }` for errors.
-- DO use environment variables for all secrets. Never hardcode Firebase config in source.
-- DO use `.env.local` for local secrets and Vercel environment variables for production.
-- DO commit `.env.example` with placeholder values.
-- DO use `next-swagger-doc` + `swagger-ui-react` for API documentation at `/api-docs`.
-- DO add JSDoc comments to all API route handlers describing the endpoint.
-- DO use the `ics` library for calendar export — client-side only, no server needed.
-- DO use Tailwind responsive classes for all layout — never hardcode widths/heights in pixels.
+**DO:**
+- Use Server Components for pages without client interactivity; `'use client'` only when needed.
+- Verify Firebase JWTs server-side on every authenticated route.
+- Write tests alongside features — not at the end.
+- Use environment variables for all secrets. Commit `.env.example` with placeholders.
+- Use `ics` for calendar export (client-side only).
 
-## DON'TS
-
-- DON'T import `firebase-admin` in any client component or page. Server-side only.
-- DON'T call Firestore directly from client components. All reads/writes go through API routes.
-- DON'T store the Firebase JWT in `localStorage` or `sessionStorage`. Keep it in React context.
-- DON'T use the `/pages` directory. This project uses the App Router exclusively.
-- DON'T use `any` in TypeScript. Use `unknown` and narrow it.
-- DON'T write custom CSS. Use Tailwind utilities only.
-- DON'T create a separate Express server. All API logic lives in Next.js route handlers.
-- DON'T deploy to Firebase Hosting. The project deploys to Vercel.
-- DON'T use `useEffect` for data fetching. Use Server Components or custom hooks with fetch.
-- DON'T hard-block students on prereq violations. Always soft-warn only.
-- DON'T commit `.env.local` or any Firebase service account key to the repo.
-- DON'T use `react-big-calendar` without evaluating bundle size first — a lightweight custom grid may be preferable.
-- DON'T live-scrape searchneu.com on user requests. Course data is pre-scraped and stored in Firestore.
+**DON'T:**
+- Import `firebase-admin` in any client component.
+- Call Firestore directly from client components.
+- Store JWT in `localStorage` or `sessionStorage`.
+- Use the `/pages` directory or `src/` directory.
+- Use `any` in TypeScript.
+- Write custom CSS.
+- Create a separate Express server.
+- Deploy to Firebase Hosting (use Vercel).
+- Use `useEffect` for data fetching.
+- Hard-block students on prereq violations — soft-warn only.
+- Live-scrape searchneu.com on user requests.
+- Commit `.env.local` or any Firebase service account key.
 
 ---
 
-## DEPENDENCIES TO PREFER
+## SECURITY
 
-| Purpose              | Preferred Library         | Notes                              |
-|----------------------|---------------------------|------------------------------------|
-| Auth                 | firebase (client)         | Already in stack                   |
-| Admin / JWT verify   | firebase-admin            | Server-side only                   |
-| API docs             | next-swagger-doc + swagger-ui-react | Per PRD                |
-| Calendar export      | ics                       | Client-side, lightweight           |
-| Testing              | vitest + @testing-library/react | Per PRD                    |
-| E2E                  | playwright                | Per PRD                            |
-| Date/time            | date-fns                  | Lightweight, tree-shakeable        |
-| HTTP fetching        | Native fetch (Next.js)    | No axios needed                    |
-| State management     | React context + useState  | No Redux — app is simple enough    |
+- Verify Firebase JWT before any Firestore operation on authenticated routes.
+- Firestore rules: users can only read/write their own documents. `courses` is read-only for clients.
+- Never log JWTs, user emails, or PII.
+- Validate all request bodies before writing to Firestore.
+- Generic auth error messages — never reveal which field was wrong.
+- Run `npm audit` in CI; fail on high-severity vulnerabilities.
 
----
-
-## SECURITY REQUIREMENTS
-
-- All authenticated API routes must verify the Firebase JWT before any Firestore operation.
-- Firestore security rules must enforce: users can only read/write their own documents.
-- The `courses` collection must be read-only for all clients (write only via Admin SDK in scraper).
-- Never log JWTs, user emails, or any PII.
-- Run `npm audit` in CI and fail the build on high-severity vulnerabilities.
-- Input validation: validate all request bodies in API routes before writing to Firestore.
-- Generic error messages on auth failures — never reveal which field (email vs password) was wrong.
-
-## ACCESSIBILITY REQUIREMENTS
+## ACCESSIBILITY
 
 - All interactive elements must be keyboard navigable.
-- All images and icons must have `alt` text or `aria-label`.
-- Use semantic HTML elements (`<nav>`, `<main>`, `<section>`, `<button>`) — not `<div>` for everything.
-- Color alone must not convey meaning (e.g. prereq warnings must have text, not just red color).
-- Minimum contrast ratio: 4.5:1 for normal text (WCAG AA).
+- All images/icons must have `alt` or `aria-label`.
+- Use semantic HTML (`<nav>`, `<main>`, `<section>`, `<button>`).
+- Color alone must not convey meaning (e.g. prereq warnings need text, not just red).
+- Minimum contrast ratio: 4.5:1 (WCAG AA).

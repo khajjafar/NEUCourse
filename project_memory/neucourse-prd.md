@@ -271,19 +271,23 @@ A freshman or transfer student who is unfamiliar with NEU's course catalog. Need
 
 ## 7. Technical Architecture
 
-### Stack
+### Tech Stack
 
-| Concern | Decision |
-|---|---|
-| **Frontend** | Next.js 14 (App Router) + TailwindCSS |
-| **Backend** | Next.js API Routes (`/app/api/v1/...`) |
-| **Auth** | Firebase Authentication — email/password (issues Firebase JWT tokens consumed by API routes) |
-| **Database** | Cloud Firestore — user plans, calendar events, course cache |
-| **Course Data** | Web scraped from searchneu.com, stored in Firestore as a `courses` collection |
-| **API Docs** | `next-swagger-doc` + `swagger-ui-react` — live at `/api-docs` |
-| **Calendar Export** | Client-side .ics generation (`ics` library) |
-| **Hosting** | Vercel (free tier) — automatic deploys from `main`, deploy previews on PRs |
-| **Cost** | $0 — Firebase Spark plan + Vercel free tier |
+| Concern         | Tool / Version                                      |
+|-----------------|-----------------------------------------------------|
+| Framework       | Next.js 14 (App Router)                             |
+| Language        | TypeScript (strict mode)                            |
+| Styling         | TailwindCSS (utility classes only — no custom CSS)  |
+| Auth            | Firebase Authentication (email/password)            |
+| Database        | Cloud Firestore                                     |
+| Server SDK      | Firebase Admin SDK (server-side only)               |
+| API Docs        | next-swagger-doc + swagger-ui-react at /api-docs    |
+| Calendar Export | ics (client-side, browser only)                     |
+| Testing         | Vitest + React Testing Library                      |
+| E2E Testing     | Playwright                                          |
+| Hosting         | Vercel (free tier)                                  |
+| Runtime         | Node.js LTS (use whatever version Vercel pins)      |
+| Package Manager | npm                                                 |
 
 ### API Design
 
@@ -325,29 +329,57 @@ courses/{courseId}                      — scraped NEU course data (shared, rea
 ```
 /app
   /api/v1
-    /plans/...          — degree plan API routes
-    /events/...         — calendar event API routes
-    /courses/...        — course search API routes
+    /plans/route.ts                          GET, POST
+    /plans/[planId]/route.ts                 GET, PUT, DELETE
+    /plans/[planId]/semesters/route.ts       GET
+    /plans/[planId]/semesters/[semId]/courses/route.ts         POST
+    /plans/[planId]/semesters/[semId]/courses/[courseId]/route.ts  DELETE
+    /events/route.ts                         GET, POST
+    /events/[eventId]/route.ts               PUT, DELETE
+    /courses/route.ts                        GET (public)
+    /courses/[courseId]/route.ts             GET (public)
   /dashboard/page.tsx
   /courses/page.tsx
   /plans/[planId]/page.tsx
   /calendar/page.tsx
-  /api-docs/page.tsx    — Swagger UI
-/components
-/hooks
+  /api-docs/page.tsx
+  layout.tsx
+  page.tsx
+/components        — flat file structure, e.g. Button.tsx, CourseCard.tsx
+/hooks             — custom React hooks, e.g. useAuth.ts, usePlans.ts
 /lib
-  /firebase.ts          — client-side Firebase init
-  /firebase-admin.ts    — server-side Admin SDK init
-  /api-helpers.ts       — auth verification, error responses
+  firebase.ts      — client-side Firebase init (browser only)
+  firebase-admin.ts — server-side Admin SDK init (never imported in client components)
+  api-helpers.ts   — verifyAuth(), errorResponse(), successResponse()
 /docs
-  /openapi.yaml         — OpenAPI 3.0 spec
-  /firestore-schema.md
-  /scraper.md
-  /api.md
-  /sprints/
+  openapi.yaml
+  firestore-schema.md
+  api.md
+  scraper.md
+  ai-usage.md
+  /sprints
+    sprint1-planning.md
+    sprint1-retro.md
+    sprint2-planning.md
+    sprint2-retro.md
 /scripts
-  /scrape-courses.js    — one-time data scraper
+  scrape-courses.js
 ```
+---
+
+## DEPENDENCIES TO PREFER
+
+| Purpose              | Preferred Library         | Notes                              |
+|----------------------|---------------------------|------------------------------------|
+| Auth                 | firebase (client)         | Already in stack                   |
+| Admin / JWT verify   | firebase-admin            | Server-side only                   |
+| API docs             | next-swagger-doc + swagger-ui-react | Per PRD                |
+| Calendar export      | ics                       | Client-side, lightweight           |
+| Testing              | vitest + @testing-library/react | Per PRD                    |
+| E2E                  | playwright                | Per PRD                            |
+| Date/time            | date-fns                  | Lightweight, tree-shakeable        |
+| HTTP fetching        | Native fetch (Next.js)    | No axios needed                    |
+| State management     | React context + useState  | No Redux — app is simple enough    |
 
 ---
 
