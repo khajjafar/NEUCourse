@@ -114,79 +114,109 @@ const fallbackCourses: Course[] = [
 ];
 
 async function scrapeSearchNeu(): Promise<Course[]> {
-    console.log('Attempting to fetch course data from SearchNEU GraphQL API...');
+    console.log('Fetching course data from SearchNEU API...');
 
-    // The SearchNEU API often uses a graphql query to fetch term course data.
-    // If the schema or endpoint is unreachable, we will gracefully fallback to the local mock data
-    // to ensure the frontend development isn't blocked.
     try {
-        const response = await fetch('https://searchneu.com/graphql', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                query: `
-                    query {
-                        classes(termId: "202510") {
-                            subject
-                            number
-                            title
-                            description
-                            credits
-                            prerequisites
-                            corequisites
-                        }
-                    }
-                `
-            })
-        });
-
+        // Fetching courses for a representative active term
+        const response = await fetch('https://searchneu.com/api/search?term=202630');
         if (!response.ok) {
-            throw new Error(`SearchNEU HTTP status ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const json = await response.json();
+        const data = await response.json();
+        const courses: Course[] = [];
 
-        if (json.errors || !json.data || !json.data.classes) {
-            throw new Error("SearchNEU GraphQL schema changed or returned errors.");
+        for (const item of data) {
+            if (!item.subject || !item.courseNumber || !item.name) continue;
+
+            const rawId = `${item.subject} ${item.courseNumber}`;
+
+            const courseObj: Course = {
+                id: rawId.replace(/\\s+/g, ''), // e.g., 'CS2500' without spacing for document id consistency
+                subject: item.subject,
+                number: item.courseNumber,
+                name: item.name.trim(),
+                description: "Northeastern University course.",
+                creditHours: parseInt(item.maxCredits, 10) || parseInt(item.minCredits, 10) || 4,
+                prereqs: [],
+                coreqs: []
+            };
+
+            // Parse prereqs from the AST provided by the API
+            if (item.prereqs && typeof item.prereqs === 'object') {
+                const extractReqs = (node: any, targetArray: string[]) => {
+                    if (!node) return;
+                    if (node.subject && node.courseNumber) {
+                        targetArray.push(`${node.subject}${node.courseNumber}`);
+                    }
+                    if (Array.isArray(node.items)) {
+                        node.items.forEach((child: any) => extractReqs(child, targetArray));
+                    }
+                };
+                extractReqs(item.prereqs, courseObj.prereqs);
+                courseObj.prereqs = [...new Set(courseObj.prereqs)]; // Deduplicate
+            }
+
+            // Parse coreqs 
+            if (item.coreqs && typeof item.coreqs === 'object') {
+                const extractReqs = (node: any, targetArray: string[]) => {
+                    if (!node) return;
+                    if (node.subject && node.courseNumber) {
+                        targetArray.push(`${node.subject}${node.courseNumber}`);
+                    }
+                    if (Array.isArray(node.items)) {
+                        node.items.forEach((child: any) => extractReqs(child, targetArray));
+                    }
+                };
+                extractReqs(item.coreqs, courseObj.coreqs);
+                courseObj.coreqs = [...new Set(courseObj.coreqs)]; // Deduplicate
+            }
+
+            // Deduplicate across the dataset
+            if (!courses.find(c => c.id === courseObj.id)) {
+                courses.push(courseObj);
+            }
         }
 
-        const courses: Course[] = json.data.classes.map((c: any) => ({
-            id: `${c.subject}${c.number}`,
-            subject: c.subject,
-            number: c.number,
-            name: c.title || "Unknown Course",
-            description: c.description || "No description available.",
-            creditHours: Number(c.credits) || 4,
-            prereqs: [], // Real parsing of text to Course IDs is complex, simplified for demo
-            coreqs: []
-        }));
-
-        console.log(`Successfully scraped ${courses.length} courses from SearchNEU.`);
-        return courses;
+        console.log(`Successfully fetched ${courses.length} courses from SearchNEU.`);
+        return courses.length > 0 ? courses : fallbackCourses;
 
     } catch (error: any) {
-        console.warn(`\n[WARNING]: SearchNEU scrape failed (${error.message}).`);
-        console.warn('Falling back to foundational NEU dataset to ensure Firebase populates.\n');
+        console.warn(`\\n[WARNING]: SearchNEU API fetch failed (${error.message}).`);
+        console.warn('Falling back to foundational NEU dataset to ensure Firebase populates.\\n');
         return fallbackCourses;
     }
 }
 
 async function uploadCoursesToFirestore(courses: Course[]) {
     console.log(`Starting upload of ${courses.length} courses to Firestore...`);
-    const batch = db.batch();
     const coursesRef = db.collection('courses');
 
-    for (const course of courses) {
-        const docRef = coursesRef.doc(course.id);
-        batch.set(docRef, course);
+    // We use chunks to avoid hitting Firestore batch limits (limit is 500 ops per batch)
+    const CHUNK_SIZE = 400;
+
+    for (let i = 0; i < courses.length; i += CHUNK_SIZE) {
+        const chunk = courses.slice(i, i + CHUNK_SIZE);
+        const batch = db.batch();
+
+        chunk.forEach((course) => {
+            const docRef = coursesRef.doc(course.id);
+            // Include a server timestamp for updates
+            batch.set(docRef, {
+                ...course,
+                updatedAt: new Date().toISOString(),
+            }, { merge: true });
+        });
+
+        try {
+            await batch.commit();
+            console.log(`Uploaded chunk ${Math.floor(i / CHUNK_SIZE) + 1} / ${Math.ceil(courses.length / CHUNK_SIZE)}`);
+        } catch (error) {
+            console.error(`Error uploading chunk ${Math.floor(i / CHUNK_SIZE) + 1}:`, error);
+        }
     }
 
-    try {
-        await batch.commit();
-        console.log('Successfully uploaded all courses to Firestore!');
-    } catch (error) {
-        console.error('Error uploading to Firestore:', error);
-    }
+    console.log('Successfully uploaded all courses to Firestore!');
 }
 
 async function run() {
