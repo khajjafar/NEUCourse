@@ -11,11 +11,11 @@ export default function CourseCard({ course }: CourseCardProps) {
         <Link href={`/courses/${course.id}`} className="block group h-full">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow h-full">
                 <div className="p-5">
-                    <div className="flex justify-between items-start mb-2">
+                    <div className="flex justify-between items-start mb-2 gap-2">
                         <h3 className="text-lg font-bold text-gray-900 leading-tight">
                             {course.subject} {course.number}: {course.name}
                         </h3>
-                        <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-800">
+                        <span className="inline-flex items-center shrink-0 whitespace-nowrap rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-800">
                             {course.creditHours} Credits
                         </span>
                     </div>

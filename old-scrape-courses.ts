@@ -2,7 +2,6 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as dotenv from 'dotenv';
 import path from 'path';
-import * as cheerio from 'cheerio';
 
 // Load .env.local for Firebase Admin credentials
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
@@ -29,15 +28,6 @@ if (!getApps().length) {
 
 const db = getFirestore();
 
-interface ClassSection {
-    crn: string;
-    seats: string;
-    meetingTimes: string;
-    rooms: string;
-    professor: string;
-    campus: string;
-}
-
 interface Course {
     id: string;
     subject: string;
@@ -47,7 +37,6 @@ interface Course {
     creditHours: number;
     prereqs: string[];
     coreqs: string[];
-    sections: ClassSection[];
 }
 
 // Fallback dataset of foundational NEU Courses if SearchNEU scraper fails
@@ -60,8 +49,7 @@ const fallbackCourses: Course[] = [
         description: "Introduces students to the university and the Khoury College of Computer Sciences.",
         creditHours: 1,
         prereqs: [],
-        coreqs: [],
-        sections: []
+        coreqs: []
     },
     {
         id: "CS2500",
@@ -71,8 +59,7 @@ const fallbackCourses: Course[] = [
         description: "Introduces the fundamental ideas of computing and the principles of programming.",
         creditHours: 4,
         prereqs: [],
-        coreqs: ["CS2501"],
-        sections: []
+        coreqs: ["CS2501"]
     },
     {
         id: "CS2510",
@@ -82,8 +69,7 @@ const fallbackCourses: Course[] = [
         description: "Builds on CS 2500 to teach object-oriented programming and data structures.",
         creditHours: 4,
         prereqs: ["CS2500"],
-        coreqs: ["CS2511"],
-        sections: []
+        coreqs: ["CS2511"]
     },
     {
         id: "CS3500",
@@ -93,8 +79,7 @@ const fallbackCourses: Course[] = [
         description: "Presents a comparative approach to software design applying object-oriented principles.",
         creditHours: 4,
         prereqs: ["CS2510"],
-        coreqs: ["CS3501"],
-        sections: []
+        coreqs: ["CS3501"]
     },
     {
         id: "CS4530",
@@ -104,8 +89,7 @@ const fallbackCourses: Course[] = [
         description: "Focuses on the engineering of complex software systems.",
         creditHours: 4,
         prereqs: ["CS3500"],
-        coreqs: [],
-        sections: []
+        coreqs: []
     },
     {
         id: "MATH1341",
@@ -115,8 +99,7 @@ const fallbackCourses: Course[] = [
         description: "Covers definition, calculation, and major uses of the derivative, as well as an introduction to integration.",
         creditHours: 4,
         prereqs: [],
-        coreqs: [],
-        sections: []
+        coreqs: []
     },
     {
         id: "BUSN1101",
@@ -126,8 +109,7 @@ const fallbackCourses: Course[] = [
         description: "Provides an overview of the business world, including economics, management, and marketing.",
         creditHours: 4,
         prereqs: [],
-        coreqs: [],
-        sections: []
+        coreqs: []
     }
 ];
 
@@ -168,72 +150,19 @@ async function scrapeSearchNeu(): Promise<Course[]> {
             throw new Error("SearchNEU GraphQL schema changed or returned errors.");
         }
 
-        const courses: Course[] = [];
-        const uniqueCourseIds = new Set<string>();
+        const courses: Course[] = json.data.classes.map((c: any) => ({
+            id: `${c.subject}${c.number}`,
+            subject: c.subject,
+            number: c.number,
+            name: c.title || "Unknown Course",
+            description: c.description || "No description available.",
+            creditHours: Number(c.credits) || 4,
+            prereqs: [], // Real parsing of text to Course IDs is complex, simplified for demo
+            coreqs: []
+        }));
 
-        for (const c of json.data.classes) {
-            const courseId = `${c.subject}${c.number}`;
-            if (uniqueCourseIds.has(courseId)) {
-                continue; // Skip if already added
-            }
-            uniqueCourseIds.add(courseId);
-
-            courses.push({
-                id: courseId,
-                subject: c.subject,
-                number: c.number,
-                name: c.title || "Unknown Course",
-                description: c.description || "No description available.",
-                creditHours: Number(c.credits) || 4,
-                prereqs: [], // Real parsing of text to Course IDs is complex, simplified for demo
-                coreqs: [],
-                sections: []
-            });
-        }
-
-        console.log(`Successfully fetched ${courses.length} courses from SearchNEU API. Now fetching sections...`);
-
-        // Batch fetch sections for all courses using Cheerio to scrape the HTML table
-        const BATCH_SIZE = 25;
-        for (let i = 0; i < courses.length; i += BATCH_SIZE) {
-            const batch = courses.slice(i, i + BATCH_SIZE);
-            console.log(`Fetching HTML section data for courses ${i + 1} to ${Math.min(i + BATCH_SIZE, courses.length)} of ${courses.length}...`);
-
-            await Promise.all(batch.map(async (course) => {
-                try {
-                    const url = `https://searchneu.com/catalog/202630/${encodeURIComponent(course.subject + ' ' + course.number)}`;
-                    const res = await fetch(url);
-                    if (!res.ok) return;
-
-                    const html = await res.text();
-                    const $ = cheerio.load(html);
-
-                    const classSections: ClassSection[] = [];
-                    $('table tbody tr').each((_, row) => {
-                        const tds = $(row).find('td');
-                        if (tds.length >= 7) {
-                            const crn = $(tds[1]).text().trim();
-                            const seatsMatch = $(tds[2]).text().match(/(\d+)\s*\/\s*(\d+)/);
-                            const seats = seatsMatch ? `${seatsMatch[1]} / ${seatsMatch[2]}` : $(tds[2]).text().trim();
-                            const timeText = $(tds[3]).text().trim().replace(/\s+/g, ' ');
-                            const rooms = $(tds[4]).text().trim();
-                            const professor = $(tds[5]).text().trim();
-                            const campus = $(tds[6]).text().trim();
-
-                            classSections.push({ crn, seats, meetingTimes: timeText, rooms, professor, campus });
-                        }
-                    });
-
-                    // Assign the sections to the course
-                    course.sections = classSections;
-                } catch (e) {
-                    // Ignore individual fetch errors so the rest keep processing
-                }
-            }));
-        }
-
-        console.log(`Successfully scraped sections for all courses.`);
-        return courses.length > 0 ? courses : fallbackCourses;
+        console.log(`Successfully scraped ${courses.length} courses from SearchNEU.`);
+        return courses;
 
     } catch (error: any) {
         console.warn(`\n[WARNING]: SearchNEU scrape failed (${error.message}).`);
