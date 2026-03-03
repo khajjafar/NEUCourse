@@ -17,3 +17,12 @@ Built the public-facing Course Search feature. This involved setting up an offli
 ## Testing
 - **Vitest Unit/Integration (`tests`):** Wrote comprehensive mocking configurations crossing RTL rendering to hit `96%` coverage across `useCourseSearch` and `CoursesPage`. Corrected a minor React Testing Library bug with fake timers failing against asynchronous fetches.
 - **Playwright E2E (`tests/courses.spec.ts`):** Constructed a fully browser-automated test navigating to `http://localhost:3000/courses`, testing real-world string inputs ("Object-Oriented Design"), filtering dropdown selections ("MATH"), and verifying accurate component resolutions. Passed perfectly!
+
+
+## Testing Instructions (Development)
+**How to test interactively:** Start the server (`npm run dev`). Navigate to `http://localhost:3000/courses`. Type a subject (e.g., "CS") or course keyword into the search bar. The debounced search will trigger, fetching and displaying matching courses dynamically without reloading the page.
+
+**Automated Tests Added:**
+- **What:** Hook and component integrations for course searching (`hooks/useCourseSearch.test.ts`, `app/courses/courses.test.tsx`).
+- **Reasoning:** It's essential that URL query formatting works and the 300ms debounce effectively curbs API spam. Tests ensure backend JSON responses map correctly into the frontend state.
+- **How to run:** Execute `npm run test`.

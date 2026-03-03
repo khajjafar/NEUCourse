@@ -16,3 +16,12 @@
 - **Testing (`vitest`):** Configured Vitest and React Testing Library (`vitest.config.ts`, `setupTests.ts`). Wrote unit and integration tests across Auth hooks and forms at ~96% code coverage.
   - Fix: Resolved Node ESM/CJS interop bugs by downgrading JSDOM from `v28` directly to `v22.1.0`.
   - Fix: Implemented `htmlFor` matching `id` tags inside forms to permit React Testing Library standard querying.
+
+
+## Testing Instructions (Development)
+**How to test interactively:** Start the development server with `npm run dev`. Navigate to `http://localhost:3000/login` or `/register` in your browser. Attempt to create an account with a test email, or log in. You can observe the errors for duplicate accounts and see successful redirects to the dashboard.
+
+**Automated Tests Added:**
+- **What:** Unit/Integration tests for authentication flows (`app/login/login.test.tsx`, `app/register/register.test.tsx`, `hooks/useAuth.test.tsx`).
+- **Reasoning:** Authentication is the gatekeeper for all user-specific data. We must ensure Firebase state transitions and error messages trigger robustly without regressions.
+- **How to run:** Execute `npm run test` to run the Vitest suite or `npm run coverage` for coverage reporting.

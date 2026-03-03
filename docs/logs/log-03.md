@@ -17,3 +17,12 @@ Built the dynamic singular Course Detail view using Next.js 13+ Advanced App Rou
 ## Testing
 - **Vitest Subsystems (`CourseDetailClient.test.tsx`):** Handled isolated rendering logic asserting loading frames mapping back configurations effectively against NextJS `useRouter()` mocks hitting `88%+` component test coverage.
 - **Playwright Specifications (`courses.spec.ts`):** Augmented the E2E Chromium instance scripting to proactively click physical search cards returned natively, validating that the React Modal animates, captures Focus correctly, lists dynamically fetched Corequisite / Prerequisite arrays, and resets to `/courses` natively successfully out-of-the-box upon `Escape` dispatch. Passed flawlessly!
+
+
+## Testing Instructions (Development)
+**How to test interactively:** During `npm run dev`, navigate to `/courses` and click on any rendered course card. An intercepting route modal will overlay the search screen displaying complete details (corequisites, prerequisites, and descriptions). You can dismiss it by pressing Escape or clicking outside.
+
+**Automated Tests Added:**
+- **What:** Component isolation tests (`components/CourseDetailClient.test.tsx` and `hooks/useSingleCourse.test.ts`).
+- **Reasoning:** Tests guarantee that dynamic route segment ID parsing works properly and fallback loading/error states render accurately for nonexistent courses.
+- **How to run:** Execute `npm run test`.

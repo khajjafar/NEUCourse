@@ -20,3 +20,12 @@
      - Added a new \`level\` query parameter on the backend to filter 1000-level vs 2000-level courses.
      - Updated \`app/courses/page.tsx\` to introduce a new "Course Level" dropdown UI next to the Department filter.
      - Updated \`useCourseSearch.ts\` React hook to handle the state and integrate it with the \`/api/v1/courses\` endpoint accurately.
+
+
+## Testing Instructions (Development)
+**How to test interactively:** Launch `npm run dev` and query courses with spaces like "ACCT 1209". Validate that the API intercepts the exact match or substring effectively. Try advancing page queries using the browser's native Forward/Back buttons to ensure URL query state restores.
+
+**Automated Tests Added:**
+- **What:** Full Vitest UI mocking replacing fake timers with asynchronous microtask resolution to test Search configurations.
+- **Reasoning:** Debouncing and Promises require careful fake-timer orchestration to ensure that network state falls back appropriately. 
+- **How to run:** Execute `npm run test --coverage`.

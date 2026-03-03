@@ -12,3 +12,12 @@
 
 ## ⏱ Timestamp
 - **Date**: $(date '+%Y-%m-%d %H:%M:%S')
+
+
+## Testing Instructions (Development)
+**How to test interactively:** Open a terminal and run `npx tsx scripts/scrape-courses.ts`. The script will output its progress fetching subjects, courses, and pushing them in batches into your local/remote Firestore emulator.
+
+**Automated Tests Added:**
+- **What:** Validated manually through scraper logging and database population checks.
+- **Reasoning:** This is a one-time utility/job pipeline to populate raw foundational data. Idempotency guarantees sequential safety.
+- **How to run:** `npx tsx scripts/scrape-courses.ts`

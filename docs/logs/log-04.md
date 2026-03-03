@@ -24,3 +24,12 @@ Built a profound Degree Tracking Map hierarchy natively syncing nested documents
 - **Testing Capabilities:**
   - Structured rigorous Vitest coverage against both `usePlans` & `usePlanDetails` globally mocking Firebase environments simulating all exception paths perfectly achieving over 80% coverage lines.
   - Drafted the dedicated Playwright End-To-End suite mapping accurate viewport interactions (`tests/plans.spec.ts`).
+
+
+## Testing Instructions (Development)
+**How to test interactively:** Run `npm run dev`. Log in, navigate to `/plans`, and create a new degree plan. Click "View" to open the planner, where you can construct semester blocks to organize courses visually.
+
+**Automated Tests Added:**
+- **What:** Custom hook mutations (`hooks/usePlans.test.ts`, `hooks/usePlanDetails.test.ts`).
+- **Reasoning:** The planner deeply manages nested Firestore documents and subcollections. Testing these endpoints ensures data integrity (handling optimistic UI updates for array unions/removals) and gracefully handling permission bounds.
+- **How to run:** Execute `npm run test`. E2E scenarios are structured in Playwright via `npm run test:e2e`.
