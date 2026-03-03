@@ -14,6 +14,7 @@ export interface CourseData {
 export function useCourseSearch() {
     const [query, setQuery] = useState("");
     const [subject, setSubject] = useState("");
+    const [level, setLevel] = useState("");
     const [courses, setCourses] = useState<CourseData[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -27,6 +28,7 @@ export function useCourseSearch() {
                 const searchParams = new URLSearchParams();
                 if (query) searchParams.append("q", query);
                 if (subject) searchParams.append("subject", subject);
+                if (level) searchParams.append("level", level);
 
                 const res = await fetch(`/api/v1/courses?${searchParams.toString()}`);
 
@@ -51,13 +53,15 @@ export function useCourseSearch() {
         const timeoutId = setTimeout(fetchCourses, 300); // 300ms debounce
         return () => clearTimeout(timeoutId);
 
-    }, [query, subject]);
+    }, [query, subject, level]);
 
     return {
         query,
         setQuery,
         subject,
         setSubject,
+        level,
+        setLevel,
         courses,
         loading,
         error

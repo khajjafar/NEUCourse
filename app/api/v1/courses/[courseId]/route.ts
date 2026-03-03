@@ -33,11 +33,16 @@ export async function GET(
             }, { status: 400 });
         }
 
-        const courseDoc = await adminDb.collection("courses").doc(courseId).get();
+        // Decode the URI component to handle cases like 'CS%205002' -> 'CS 5002'
+        const decodedId = decodeURIComponent(courseId);
+        // Normalize to removing all spaces and dashes, converting to uppercase (e.g., 'cs 5002' -> 'CS5002')
+        const normalizedId = decodedId.replace(/[\\s\\-]+/g, '').toUpperCase();
+
+        const courseDoc = await adminDb.collection("courses").doc(normalizedId).get();
 
         if (!courseDoc.exists) {
             return NextResponse.json({
-                error: { code: "NOT_FOUND", message: `Course ${courseId} not found.` }
+                error: { code: "NOT_FOUND", message: `Course ${decodedId} not found.` }
             }, { status: 404 });
         }
 
