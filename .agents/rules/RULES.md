@@ -2,7 +2,6 @@
 trigger: always_on
 ---
 
-
 NOTE: Whenever you are about to respond to me, use the 🪐 emoji. 
 
 # Northeastern University degree planning + scheduling web app
@@ -101,9 +100,9 @@ NEVER SKIP THIS
 
 ---
 
-## MUST FOLLOW: TESTING RULES (REQUIRED)
+## MUST DO FIRST BEFORE ANY DEVELOPMENT: TESTING RULES (REQUIRED)
 
-Before any development occurs, you must create and developa testing strategy for the feature you are about to implement. Create the tests in the `tests/` directory.
+You must create and develop a testing strategy for the feature you are about to implement. Create the tests in the `tests/` directory. 
 
 - **Unit/Integration:** Vitest + React Testing Library
 - **E2E:** Playwright against Firebase emulator or dedicated test project
