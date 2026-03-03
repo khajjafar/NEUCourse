@@ -160,7 +160,7 @@ export default function CourseDetailClient({ courseId, isModal = false }: Course
                                             {course.coreqs.map((coreq, index) => (
                                                 <Link
                                                     key={`coreq-${index}`}
-                                                    href={`/courses/${coreq.replace(/\s+/g, '')}`}
+                                                    href={`/courses/${coreq.replace(/\\s+/g, '')}`}
                                                     className="px-3 py-1.5 bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200 rounded-lg text-sm font-medium transition-colors cursor-pointer shadow-sm hover:shadow"
                                                 >
                                                     {coreq}
@@ -172,10 +172,61 @@ export default function CourseDetailClient({ courseId, isModal = false }: Course
                                     )}
                                 </div>
                             </div>
+
+                            {/* Class Sections Table */}
+                            {course.sections && course.sections.length > 0 && (
+                                <div className="mt-8 pt-6 border-t border-gray-100">
+                                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                                        <svg className="w-5 h-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        Class Sections Found
+                                    </h3>
+                                    <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+                                        <table className="w-full text-sm text-left align-middle">
+                                            <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
+                                                <tr>
+                                                    <th className="px-4 py-3 font-semibold text-gray-600">CRN</th>
+                                                    <th className="px-4 py-3 font-semibold text-gray-600">Meeting Times</th>
+                                                    <th className="px-4 py-3 font-semibold text-gray-600">Seats</th>
+                                                    <th className="px-4 py-3 font-semibold text-gray-600 hidden sm:table-cell">Professor</th>
+                                                    <th className="px-4 py-3 font-semibold text-gray-600 hidden md:table-cell">Location</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-100 bg-white">
+                                                {course.sections.map((section, idx) => (
+                                                    <tr key={idx} className="hover:bg-blue-50/50 transition-colors group">
+                                                        <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
+                                                            {section.crn}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-gray-700">
+                                                            {section.meetingTimes}
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${section.seats.startsWith('0') || section.seats.includes('Full')
+                                                                    ? 'bg-red-100 text-red-800'
+                                                                    : 'bg-green-100 text-green-800'
+                                                                }`}>
+                                                                {section.seats}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-gray-600 hidden sm:table-cell line-clamp-1 truncate max-w-[150px]">
+                                                            {section.professor}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-gray-500 hidden md:table-cell">
+                                                            {section.rooms} {section.campus !== 'Boston' && `(${section.campus})`}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ) : null}
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

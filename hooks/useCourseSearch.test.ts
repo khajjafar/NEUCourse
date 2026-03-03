@@ -8,13 +8,11 @@ global.fetch = mockFetch;
 
 describe("useCourseSearch hook", () => {
     beforeEach(() => {
-        vi.useFakeTimers();
         mockFetch.mockClear();
     });
 
     afterEach(() => {
-        vi.clearAllTimers();
-        vi.useRealTimers();
+        vi.restoreAllMocks();
     });
 
     it("should fetch courses successfully with query, subject, and level parameters", async () => {
@@ -33,8 +31,8 @@ describe("useCourseSearch hook", () => {
         });
 
         // Fast-forward debounce timeout
-        act(() => {
-            vi.advanceTimersByTime(300);
+        await act(async () => {
+            await new Promise(r => setTimeout(r, 350));
         });
 
         await waitFor(() => {
@@ -56,8 +54,8 @@ describe("useCourseSearch hook", () => {
 
         const { result } = renderHook(() => useCourseSearch());
 
-        act(() => {
-            vi.advanceTimersByTime(300);
+        await act(async () => {
+            await new Promise(r => setTimeout(r, 350));
         });
 
         await waitFor(() => {

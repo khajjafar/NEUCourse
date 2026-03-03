@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
 
+export interface ClassSection {
+    crn: string;
+    seats: string;
+    meetingTimes: string;
+    rooms: string;
+    professor: string;
+    campus: string;
+}
+
 export interface CourseData {
     id: string;
     subject: string;
@@ -9,6 +18,7 @@ export interface CourseData {
     creditHours: number;
     prereqs: string[];
     coreqs: string[];
+    sections?: ClassSection[];
 }
 
 export function useCourseSearch() {

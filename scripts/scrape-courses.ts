@@ -157,7 +157,8 @@ async function scrapeSearchNeu(): Promise<Course[]> {
                 description: "Northeastern University course.",
                 creditHours: parseInt(item.maxCredits, 10) || parseInt(item.minCredits, 10) || 4,
                 prereqs: [],
-                coreqs: []
+                coreqs: [],
+                sections: []
             };
 
             // Parse prereqs from the AST provided by the API
@@ -194,29 +195,6 @@ async function scrapeSearchNeu(): Promise<Course[]> {
             if (!courses.find(c => c.id === courseObj.id)) {
                 courses.push(courseObj);
             }
-        }
-
-        const courses: Course[] = [];
-        const uniqueCourseIds = new Set<string>();
-
-        for (const c of json.data.classes) {
-            const courseId = `${c.subject}${c.number}`;
-            if (uniqueCourseIds.has(courseId)) {
-                continue; // Skip if already added
-            }
-            uniqueCourseIds.add(courseId);
-
-            courses.push({
-                id: courseId,
-                subject: c.subject,
-                number: c.number,
-                name: c.title || "Unknown Course",
-                description: c.description || "No description available.",
-                creditHours: Number(c.credits) || 4,
-                prereqs: [], // Real parsing of text to Course IDs is complex, simplified for demo
-                coreqs: [],
-                sections: []
-            });
         }
 
         console.log(`Successfully fetched ${courses.length} courses from SearchNEU API. Now fetching sections...`);
