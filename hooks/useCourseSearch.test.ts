@@ -1,55 +1,69 @@
-import { renderHook, waitFor } from '@testing-library/react';
-import { useCourseSearch } from './useCourseSearch';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { renderHook, waitFor, act } from "@testing-library/react";
+import { useCourseSearch } from "./useCourseSearch";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-describe('useCourseSearch', () => {
+// Mock global fetch
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
+
+describe("useCourseSearch hook", () => {
     beforeEach(() => {
-        vi.resetAllMocks();
-        global.fetch = vi.fn();
+        vi.useFakeTimers();
+        mockFetch.mockClear();
     });
 
-    it('should initialize with default states', () => {
-        const { result } = renderHook(() => useCourseSearch());
-        expect(result.current.query).toBe('');
-        expect(result.current.subject).toBe('');
-        expect(result.current.courses).toEqual([]);
-        expect(result.current.loading).toBe(false);
-        expect(result.current.error).toBeNull();
+    afterEach(() => {
+        vi.clearAllTimers();
+        vi.useRealTimers();
     });
 
-    it('should fetch and update courses data', async () => {
-        const mockCourses = [{ id: 'CS1234', name: 'Test Course', subject: 'CS', number: '1234' }];
-
-        (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    it("should fetch courses successfully with query, subject, and level parameters", async () => {
+        const mockData = { data: [{ id: "CS5002", subject: "CS", number: "5002" }] };
+        mockFetch.mockResolvedValueOnce({
             ok: true,
-            json: async () => ({ data: mockCourses })
+            json: async () => mockData,
         });
 
         const { result } = renderHook(() => useCourseSearch());
 
-        await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith('/api/v1/courses?');
+        act(() => {
+            result.current.setQuery("test query");
+            result.current.setSubject("CS");
+            result.current.setLevel("5000");
+        });
+
+        // Fast-forward debounce timeout
+        act(() => {
+            vi.advanceTimersByTime(300);
         });
 
         await waitFor(() => {
+            expect(result.current.courses).toEqual(mockData.data);
             expect(result.current.loading).toBe(false);
-            expect(result.current.courses).toEqual(mockCourses);
-            expect(result.current.error).toBeNull();
+            expect(result.current.error).toBe(null);
+
+            // Should properly format query params
+            expect(mockFetch).toHaveBeenCalledWith(
+                "/api/v1/courses?q=test+query&subject=CS&level=5000"
+            );
         });
     });
 
-    it('should handle API errors', async () => {
-        (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    it("should handle API errors", async () => {
+        mockFetch.mockResolvedValueOnce({
             ok: false,
-            json: async () => ({ error: { message: 'Failed to fetch courses' } })
         });
 
         const { result } = renderHook(() => useCourseSearch());
 
+        act(() => {
+            vi.advanceTimersByTime(300);
+        });
+
         await waitFor(() => {
-            expect(result.current.error).toBe('Failed to fetch courses');
-            expect(result.current.loading).toBe(false);
+            expect(result.current.error).toBe("Failed to fetch courses");
             expect(result.current.courses).toEqual([]);
+            expect(result.current.loading).toBe(false);
         });
     });
 });
