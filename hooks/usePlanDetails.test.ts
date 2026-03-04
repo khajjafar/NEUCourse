@@ -157,4 +157,89 @@ describe('usePlanDetails Hook', () => {
         const isRemoved = !result.current.plan?.semesters[0].courses.some((c: any) => typeof c === 'string' ? c === 'CS3500' : c.courseId === 'CS3500');
         expect(isRemoved).toBe(true);
     });
+    it('should delete a semester optimistically', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
+        } as any);
+
+        const initialMock = {
+            id: 'p1', name: 'Plan', semesters: [
+                { id: 'sem1', name: 'Fall', courses: [] },
+                { id: 'sem2', name: 'Spring', courses: [] }
+            ]
+        };
+
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+        const { result } = renderHook(() => usePlanDetails('p1'));
+        await waitFor(() => expect(result.current.plan?.semesters).toHaveLength(2));
+
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: { deleted: true } }) });
+        await act(async () => {
+            await result.current.deleteSemester('sem1');
+        });
+
+        expect(mockFetch).toHaveBeenCalledWith('/api/v1/plans/p1/semesters/sem1', expect.objectContaining({ method: 'DELETE' }));
+        expect(result.current.plan?.semesters).toHaveLength(1);
+        expect(result.current.plan?.semesters[0].id).toBe('sem2');
+    });
+
+    it('should reorder semesters optimistically', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
+        } as any);
+
+        const initialMock = {
+            id: 'p1', name: 'Plan', semesters: [
+                { id: 'sem1', name: 'Fall', order: 1, courses: [] },
+                { id: 'sem2', name: 'Spring', order: 2, courses: [] }
+            ]
+        };
+
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+        const { result } = renderHook(() => usePlanDetails('p1'));
+        await waitFor(() => expect(result.current.plan?.semesters).toHaveLength(2));
+
+        mockFetch.mockResolvedValue({ ok: true, json: async () => ({ data: { updated: true } }) });
+
+        await act(async () => {
+            await result.current.reorderSemesters('sem1', 1); // Move sem1 to index 1 (second place)
+        });
+
+        expect(result.current.plan?.semesters[0].id).toBe('sem2');
+        expect(result.current.plan?.semesters[1].id).toBe('sem1');
+        expect(result.current.plan?.semesters[0].order).toBe(1);
+        expect(result.current.plan?.semesters[1].order).toBe(2);
+    });
+
+    it('should move a course between semesters optimistically', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
+        } as any);
+
+        const initialMock = {
+            id: 'p1', name: 'Plan', semesters: [
+                { id: 'sem1', name: 'Fall', order: 1, courses: ['CS1000', 'CS2000'] },
+                { id: 'sem2', name: 'Spring', order: 2, courses: [] }
+            ]
+        };
+
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+        const { result } = renderHook(() => usePlanDetails('p1'));
+        await waitFor(() => expect(result.current.plan?.semesters).toHaveLength(2));
+
+        mockFetch.mockResolvedValue({ ok: true, json: async () => ({ data: { updated: true } }) });
+
+        await act(async () => {
+            // Move 'CS2000' (index 1) from 'sem1' to 'sem2' at index 0
+            await result.current.moveCourseBetweenSemesters('sem1', 'sem2', 1, 0);
+        });
+
+        expect(mockFetch).toHaveBeenCalledTimes(3); // 1 initial + 2 PATCH (both sems)
+
+        expect(result.current.plan?.semesters[0].id).toBe('sem1');
+        expect(result.current.plan?.semesters[0].courses).toEqual(['CS1000']);
+
+        expect(result.current.plan?.semesters[1].id).toBe('sem2');
+        expect(result.current.plan?.semesters[1].courses).toEqual(['CS2000']);
+    });
 });

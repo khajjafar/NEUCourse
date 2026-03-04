@@ -3,8 +3,6 @@
 import React from 'react';
 import { useSingleCourse } from '@/hooks/useSingleCourse';
 import Link from 'next/link';
-import { useDraggable } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
 
 interface CourseMiniCardProps {
     courseId: string;
@@ -12,22 +10,10 @@ interface CourseMiniCardProps {
     onRemove?: () => void;
     allPlanCourses?: { courseId: string, semesterOrder: number }[];
     currentSemesterOrder?: number;
-    semesterId?: string;
 }
 
-export default function CourseMiniCard({ courseId, crn, onRemove, allPlanCourses, currentSemesterOrder, semesterId }: CourseMiniCardProps) {
+export default function CourseMiniCard({ courseId, crn, onRemove, allPlanCourses, currentSemesterOrder }: CourseMiniCardProps) {
     const { course, loading, error } = useSingleCourse(courseId);
-
-    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-        id: semesterId ? `${semesterId}-${courseId}-${crn || 'nocrn'}` : courseId,
-        data: { courseId, crn, semesterId },
-        disabled: !semesterId // Only draggable when actively inside a semester
-    });
-
-    const style = transform ? {
-        transform: CSS.Translate.toString(transform),
-        zIndex: isDragging ? 50 : 1,
-    } : undefined;
 
     if (loading) {
         return (
@@ -56,20 +42,9 @@ export default function CourseMiniCard({ courseId, crn, onRemove, allPlanCourses
         course.coreqs.some(cr => !allPlanCourses.some(c => c.courseId === cr && c.semesterOrder <= currentSemesterOrder)) : false;
 
     return (
-        <div
-            ref={setNodeRef}
-            style={style}
-            {...attributes}
-            {...listeners}
-            className={`group relative flex flex-col p-3 bg-white rounded-lg border shadow-sm transition-colors cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50 border-indigo-500 ring-2 ring-indigo-500' : 'border-gray-200 hover:border-gray-300'
-                }`}
-        >
+        <div className="group relative flex flex-col p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:border-gray-300 transition-colors">
             <div className="flex items-center justify-between mb-2">
-                <Link
-                    href={`/courses/${course.id}`}
-                    className="flex-1 min-w-0 pr-4"
-                    onPointerDown={(e) => e.stopPropagation()} /* Prevent dragging when clicking link */
-                >
+                <Link href={`/courses/${course.id}`} className="flex-1 min-w-0 pr-4">
                     <div className="flex items-baseline space-x-2">
                         <span className="text-sm font-bold text-gray-900">{course.subject} {course.number}</span>
                         <span className="text-sm text-gray-500 truncate">{course.name}</span>
@@ -83,7 +58,6 @@ export default function CourseMiniCard({ courseId, crn, onRemove, allPlanCourses
 
                     {onRemove && (
                         <button
-                            onPointerDown={(e) => e.stopPropagation()} /* Prevent dragging when clicking remove */
                             onClick={onRemove}
                             className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700 text-sm font-medium focus:opacity-100"
                             aria-label={`Remove ${course.subject} ${course.number}`}
