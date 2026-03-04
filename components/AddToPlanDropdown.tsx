@@ -23,18 +23,17 @@ export default function AddToPlanDropdown({ courseId, crn }: AddToPlanDropdownPr
     // We only fetch the detailed plan if one is selected in the list
     const { plan: detailedPlan, loading: detailsLoading, addCourseToSemester } = usePlanDetails(selectedPlanId);
 
-    // Close dropdown on outside click
+    // Close on escape key
     useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            const target = e.target as HTMLElement;
-            if (!target.closest('#add-to-plan-dropdown')) {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
                 setIsOpen(false);
                 setSelectedPlanId(null);
                 setSuccessMessage(null);
             }
         };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEsc);
+        return () => document.removeEventListener('keydown', handleEsc);
     }, []);
 
     if (!user) return null; // Don't show to unauthenticated users
@@ -68,7 +67,15 @@ export default function AddToPlanDropdown({ courseId, crn }: AddToPlanDropdownPr
             </button>
 
             {isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto overflow-x-hidden bg-gray-900/50 p-4 sm:p-0">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-0">
+                    <div
+                        className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm"
+                        onClick={() => {
+                            setIsOpen(false);
+                            setSelectedPlanId(null);
+                            setSuccessMessage(null);
+                        }}
+                    />
                     <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-200">
                         <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
                             <h3 className="text-lg font-bold text-gray-900">
