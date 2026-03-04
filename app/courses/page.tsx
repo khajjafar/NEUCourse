@@ -21,7 +21,8 @@ export default function CoursesPage() {
     const {
         query, setQuery,
         subject, setSubject,
-        level, setLevel,
+        minLevel, setMinLevel,
+        maxLevel, setMaxLevel,
         courses, loading, error
     } = useCourseSearch();
 
@@ -70,20 +71,37 @@ export default function CoursesPage() {
                         </select>
                     </div>
                     <div className="sm:w-48">
-                        <label htmlFor="level" className="sr-only">Filter by Level</label>
+                        <label htmlFor="minLevel" className="sr-only">Min Level</label>
                         <select
-                            id="level"
+                            id="minLevel"
                             className="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 hover:bg-white focus:bg-white transition-colors focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
-                            value={level}
-                            onChange={(e) => setLevel(e.target.value === "ALL" ? "" : e.target.value)}
+                            value={minLevel}
+                            onChange={(e) => setMinLevel(e.target.value === "ALL" ? "" : e.target.value)}
                         >
-                            <option value="ALL">All Levels</option>
-                            <option value="1000">1000-Level</option>
-                            <option value="2000">2000-Level</option>
-                            <option value="3000">3000-Level</option>
-                            <option value="4000">4000-Level</option>
-                            <option value="5000">5000-Level</option>
-                            <option value="6000">6000-Level</option>
+                            <option value="ALL">Min Level</option>
+                            <option value="1000">1000</option>
+                            <option value="2000">2000</option>
+                            <option value="3000">3000</option>
+                            <option value="4000">4000</option>
+                            <option value="5000">5000</option>
+                            <option value="6000">6000</option>
+                        </select>
+                    </div>
+                    <div className="sm:w-48">
+                        <label htmlFor="maxLevel" className="sr-only">Max Level</label>
+                        <select
+                            id="maxLevel"
+                            className="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 hover:bg-white focus:bg-white transition-colors focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                            value={maxLevel}
+                            onChange={(e) => setMaxLevel(e.target.value === "ALL" ? "" : e.target.value)}
+                        >
+                            <option value="ALL">Max Level</option>
+                            <option value="1999">1999</option>
+                            <option value="2999">2999</option>
+                            <option value="3999">3999</option>
+                            <option value="4999">4999</option>
+                            <option value="5999">5999</option>
+                            <option value="6999">6999</option>
                         </select>
                     </div>
                 </div>

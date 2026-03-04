@@ -32,7 +32,8 @@ export async function GET(request: NextRequest) {
         const searchParams = request.nextUrl.searchParams;
         const q = searchParams.get("q")?.toLowerCase().trim() || "";
         const subject = searchParams.get("subject")?.toUpperCase().trim() || "";
-        const level = searchParams.get("level") || "";
+        const minLevelStr = searchParams.get("minLevel") || "";
+        const maxLevelStr = searchParams.get("maxLevel") || "";
 
         // Only fetch from Firestore if cache is missing or expired
         if (!cachedCourses || Date.now() - lastCacheTime > CACHE_TTL) {
@@ -56,11 +57,17 @@ export async function GET(request: NextRequest) {
             }
 
             let matchesLevel = true;
-            if (level) {
+            if (minLevelStr || maxLevelStr) {
                 const num = parseInt(data.number, 10);
                 if (!isNaN(num)) {
-                    const levelFilter = parseInt(level, 10);
-                    matchesLevel = num >= levelFilter && num < levelFilter + 1000;
+                    if (minLevelStr) {
+                        const minLevel = parseInt(minLevelStr, 10);
+                        if (num < minLevel) matchesLevel = false;
+                    }
+                    if (maxLevelStr) {
+                        const maxLevel = parseInt(maxLevelStr, 10);
+                        if (num > maxLevel) matchesLevel = false;
+                    }
                 } else {
                     matchesLevel = false;
                 }
@@ -76,16 +83,19 @@ export async function GET(request: NextRequest) {
                 // Allows searching just "2500" or partial course names
                 const numStr = data.number ? String(data.number) : "";
 
-                const searchableString = `${data.subject || ''} ${data.number || ''} ${data.name || ''} ${data.description || ''}`.toLowerCase();
+                const searchableString = `${data.subject || ''} ${data.number || ''} ${data.name || ''}`.toLowerCase();
 
                 // Advanced matching logic
                 if (exactCourseIdMatch) {
                     matchesQuery = true;
-                } else if (/^\\d{1,4}$/.test(q)) {
+                } else if (/^\d{1,4}$/.test(q)) {
                     // if user types just a course number, match startsWith to allow "25" to match "2500"
                     matchesQuery = numStr.startsWith(q);
                 } else {
-                    matchesQuery = searchableString.includes(q);
+                    // Escape query for regex and use word boundary `\b` so "cs" matches "CS 2500" but not "AFCS" or "Ethics"
+                    const escapedSearch = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const wordBoundaryRegex = new RegExp(`\\b${escapedSearch}`, 'i');
+                    matchesQuery = wordBoundaryRegex.test(searchableString);
                 }
             }
 
