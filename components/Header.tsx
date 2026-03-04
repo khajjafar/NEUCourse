@@ -18,34 +18,34 @@ export default function Header() {
         <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
-                    <div className="flex">
+                    <div className="flex h-16">
                         <div className="flex-shrink-0 flex items-center">
-                            <Link href="/dashboard" className="text-xl font-bold text-red-600 tracking-tight">
-                                NEUCourse
+                            <Link href="/dashboard" className="text-2xl font-bold tracking-tight">
+                                <span className="text-red-600">NEU</span><span className="text-gray-900">Course</span>
                             </Link>
                         </div>
-                        <nav className="ml-6 flex space-x-8">
+                        <nav className="ml-6 flex space-x-8 h-full">
                             <Link
                                 href="/dashboard"
-                                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname === '/dashboard' ? 'border-red-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}`}
+                                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-full ${pathname === '/dashboard' ? 'border-red-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}`}
                             >
                                 Dashboard
                             </Link>
                             <Link
                                 href="/plans"
-                                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname.startsWith('/plans') ? 'border-red-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}`}
+                                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-full ${pathname.startsWith('/plans') ? 'border-red-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}`}
                             >
                                 Plans
                             </Link>
                             <Link
                                 href="/courses"
-                                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname.startsWith('/courses') ? 'border-red-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}`}
+                                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-full ${pathname.startsWith('/courses') ? 'border-red-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}`}
                             >
                                 Courses
                             </Link>
                             <Link
                                 href="/calendar"
-                                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname === '/calendar' ? 'border-red-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}`}
+                                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium h-full ${pathname === '/calendar' ? 'border-red-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}`}
                             >
                                 Calendar
                             </Link>

@@ -5,6 +5,7 @@ export interface Plan {
     id: string;
     name: string;
     createdAt?: any;
+    semesters?: any[];
 }
 
 export function usePlans() {

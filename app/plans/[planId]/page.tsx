@@ -4,6 +4,7 @@ import React, { useState, FormEvent, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePlanDetails } from '@/hooks/usePlanDetails';
 import { useRouter, useParams } from 'next/navigation';
+import { useMemo } from 'react';
 import CourseMiniCard from '@/components/CourseMiniCard';
 import Link from 'next/link';
 
@@ -41,6 +42,16 @@ export default function PlanDetailsPage() {
             setIsCreatingSem(false);
         }
     };
+
+    const allPlanCourses = useMemo(() => {
+        if (!plan) return [];
+        return plan.semesters.flatMap(sem =>
+            sem.courses.map(c => ({
+                courseId: typeof c === 'string' ? c : c.courseId,
+                semesterOrder: sem.order
+            }))
+        );
+    }, [plan]);
 
     if (authLoading || planLoading) {
         return (
@@ -88,7 +99,7 @@ export default function PlanDetailsPage() {
                             </li>
                         </ol>
                     </nav>
-                    <h2 className="text-3xl font-bold leading-7 text-gray-900 sm:text-4xl sm:truncate">
+                    <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
                         {plan.name}
                     </h2>
                 </div>
@@ -102,54 +113,53 @@ export default function PlanDetailsPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Semester List Column */}
-                <div className="lg:col-span-2 space-y-6">
-                    {plan.semesters.length === 0 ? (
-                        <div className="text-center bg-white rounded-lg border-2 border-dashed border-gray-300 p-12">
-                            <h3 className="mt-2 text-sm font-semibold text-gray-900">No semesters defined</h3>
-                            <p className="mt-1 text-sm text-gray-500">Get started by creating your first semester to the right.</p>
-                        </div>
-                    ) : (
-                        plan.semesters.map((semester) => (
-                            <div key={semester.id} className="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
-                                <div className="px-4 py-5 sm:px-6 bg-gray-50 flex justify-between items-center border-b border-gray-200">
-                                    <h3 className="text-lg leading-6 font-medium text-gray-900">
-                                        {semester.name}
-                                    </h3>
-                                    <span className="text-sm text-gray-500">{semester.courses.length} courses</span>
-                                </div>
-                                <div className="px-4 py-5 sm:p-6 p-4">
-                                    {semester.courses.length === 0 ? (
-                                        <p className="text-gray-500 text-sm italic py-4 text-center">No courses added yet.</p>
-                                    ) : (
-                                        <div className="space-y-3">
-                                            {semester.courses.map((courseItem, idx) => {
-                                                const cid = typeof courseItem === 'string' ? courseItem : courseItem.courseId;
-                                                const crn = typeof courseItem === 'string' ? undefined : courseItem.crn;
-                                                return (
-                                                    <CourseMiniCard
-                                                        key={`${cid}-${idx}`}
-                                                        courseId={cid}
-                                                        crn={crn}
-                                                        onRemove={() => {
-                                                            removeCourseFromSemester(semester.id, cid)
-                                                                .catch(err => alert(err.message));
-                                                        }}
-                                                    />
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
+            <div className="flex overflow-x-auto items-start gap-6 pb-8 min-h-[60vh]">
+                {/* Semester List Columns */}
+                {plan.semesters.length === 0 ? (
+                    <div className="text-center bg-white rounded-lg border-2 border-dashed border-gray-300 p-12 w-full max-w-2xl mx-auto">
+                        <h3 className="mt-2 text-sm font-semibold text-gray-900">No semesters defined</h3>
+                        <p className="mt-1 text-sm text-gray-500">Get started by creating your first semester to the right.</p>
+                    </div>
+                ) : (
+                    plan.semesters.map((semester) => (
+                        <div key={semester.id} className="w-80 shrink-0 bg-gray-100 rounded-lg p-3 flex flex-col border border-gray-200 shadow-sm">
+                            <div className="flex justify-between items-center mb-3 px-1">
+                                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
+                                    {semester.name}
+                                </h3>
+                                <span className="text-xs font-medium text-gray-500">{semester.courses.length} courses</span>
                             </div>
-                        ))
-                    )}
-                </div>
+
+                            <div className="flex flex-col gap-3 min-h-[100px]">
+                                {semester.courses.length === 0 ? (
+                                    <p className="text-gray-400 text-sm italic py-4 text-center">Drag courses here</p>
+                                ) : (
+                                    semester.courses.map((courseItem, idx) => {
+                                        const cid = typeof courseItem === 'string' ? courseItem : courseItem.courseId;
+                                        const crn = typeof courseItem === 'string' ? undefined : courseItem.crn;
+                                        return (
+                                            <CourseMiniCard
+                                                key={`${cid}-${idx}`}
+                                                courseId={cid}
+                                                crn={crn}
+                                                allPlanCourses={allPlanCourses}
+                                                currentSemesterOrder={semester.order}
+                                                onRemove={() => {
+                                                    removeCourseFromSemester(semester.id, cid)
+                                                        .catch(err => alert(err.message));
+                                                }}
+                                            />
+                                        );
+                                    })
+                                )}
+                            </div>
+                        </div>
+                    ))
+                )}
 
                 {/* Create Semester Column */}
-                <div className="lg:col-span-1">
-                    <div className="bg-white shadow sm:rounded-lg border border-gray-200 sticky top-4">
+                <div className="w-80 shrink-0">
+                    <div className="bg-white shadow-sm sm:rounded-lg border border-gray-200 border-dashed sticky top-4">
                         <div className="px-4 py-5 sm:p-6">
                             <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
                                 Add Semester

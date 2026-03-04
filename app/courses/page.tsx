@@ -37,7 +37,7 @@ export default function CoursesPage() {
                             id="search"
                             type="text"
                             placeholder="Search by name, course number (e.g. CS 3500)..."
-                            className="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 hover:bg-white focus:bg-white transition-colors focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                            className="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 hover:bg-white focus:bg-white transition-colors focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                         />
@@ -46,7 +46,7 @@ export default function CoursesPage() {
                         <label htmlFor="subject" className="sr-only">Filter by Subject</label>
                         <select
                             id="subject"
-                            className="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 hover:bg-white focus:bg-white transition-colors focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                            className="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 hover:bg-white focus:bg-white transition-colors focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none"
                             value={subject}
                             onChange={(e) => setSubject(e.target.value === "ALL" ? "" : e.target.value)}
                         >
@@ -59,7 +59,7 @@ export default function CoursesPage() {
                         <label htmlFor="minLevel" className="sr-only">Min Level</label>
                         <select
                             id="minLevel"
-                            className="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 hover:bg-white focus:bg-white transition-colors focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                            className="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 hover:bg-white focus:bg-white transition-colors focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none"
                             value={minLevel}
                             onChange={(e) => setMinLevel(e.target.value === "ALL" ? "" : e.target.value)}
                         >
@@ -76,7 +76,7 @@ export default function CoursesPage() {
                         <label htmlFor="maxLevel" className="sr-only">Max Level</label>
                         <select
                             id="maxLevel"
-                            className="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 hover:bg-white focus:bg-white transition-colors focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                            className="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 hover:bg-white focus:bg-white transition-colors focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none"
                             value={maxLevel}
                             onChange={(e) => setMaxLevel(e.target.value === "ALL" ? "" : e.target.value)}
                         >

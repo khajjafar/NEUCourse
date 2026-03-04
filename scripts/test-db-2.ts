@@ -1,4 +1,4 @@
-import { adminDb } from './lib/firebase-admin';
+import { adminDb } from '../lib/firebase-admin';
 
 async function verify() {
     const cs = await adminDb.collection("courses").doc("CS2500").get();

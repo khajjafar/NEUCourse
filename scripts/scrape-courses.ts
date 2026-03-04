@@ -245,7 +245,7 @@ async function scrapeSearchNeu(limit: number = 0): Promise<Course[]> {
                         course.description = fullText.replace(/see more/i, '').replace(/see less/i, '').trim();
                         console.log(`[${course.number}] Set course.description to: ${course.description.substring(0, 30)}...`);
                     } catch (descError) {
-                        console.error(`Error scraping description for ${course.subject} ${course.number}:`, descError.message);
+                        console.error(`Error scraping description for ${course.subject} ${course.number}:`, (descError as Error).message);
                         course.description = "Northeastern University course."; // fallback
                     }
 
