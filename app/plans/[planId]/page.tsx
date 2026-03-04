@@ -194,6 +194,9 @@ export default function PlanDetailsPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Right Edge Scroll Spacer */}
+                <div className="w-2 sm:w-4 lg:w-6 shrink-0" aria-hidden="true" />
             </div>
         </div>
     );
