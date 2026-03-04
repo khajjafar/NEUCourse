@@ -6,6 +6,16 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 
+// Helper to inject a space into compact IDs (e.g. "ACC2100" -> "ACC 2100")
+const formatCourseId = (id: string) => {
+    return id.replace(/^([A-Za-z]+)(\d+)/, '$1 $2');
+};
+
+// Helper to split days from times (e.g. "MTWTF6:00pm - 9:20pm" -> "MTWTF 6:00pm - 9:20pm")
+const formatMeetingTime = (timeStr: string) => {
+    return timeStr.replace(/^([A-Za-z]+)(\d)/, '$1 $2');
+};
+
 interface CourseDetailClientProps {
     courseId: string;
     isModal?: boolean;
@@ -133,15 +143,18 @@ export default function CourseDetailClient({ courseId, isModal = false }: Course
                                     </h3>
                                     {course.prereqs && course.prereqs.length > 0 ? (
                                         <div className="flex flex-wrap gap-2">
-                                            {course.prereqs.map((prereq, index) => (
-                                                <Link
-                                                    key={`prereq-${index}`}
-                                                    href={`/courses/${prereq.replace(/\s+/g, '')}`}
-                                                    className="px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-lg text-sm font-medium transition-colors cursor-pointer shadow-sm hover:shadow"
-                                                >
-                                                    {prereq}
-                                                </Link>
-                                            ))}
+                                            {course.prereqs.map((prereq, index) => {
+                                                const formattedId = formatCourseId(prereq);
+                                                return (
+                                                    <Link
+                                                        key={`prereq-${index}`}
+                                                        href={`/courses/${formattedId}`}
+                                                        className="px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-lg text-sm font-medium transition-colors cursor-pointer shadow-sm hover:shadow"
+                                                    >
+                                                        {formattedId}
+                                                    </Link>
+                                                );
+                                            })}
                                         </div>
                                     ) : (
                                         <p className="text-gray-500 text-sm italic py-2">None required</p>
@@ -157,15 +170,18 @@ export default function CourseDetailClient({ courseId, isModal = false }: Course
                                     </h3>
                                     {course.coreqs && course.coreqs.length > 0 ? (
                                         <div className="flex flex-wrap gap-2">
-                                            {course.coreqs.map((coreq, index) => (
-                                                <Link
-                                                    key={`coreq-${index}`}
-                                                    href={`/courses/${coreq.replace(/\\s+/g, '')}`}
-                                                    className="px-3 py-1.5 bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200 rounded-lg text-sm font-medium transition-colors cursor-pointer shadow-sm hover:shadow"
-                                                >
-                                                    {coreq}
-                                                </Link>
-                                            ))}
+                                            {course.coreqs.map((coreq, index) => {
+                                                const formattedId = formatCourseId(coreq);
+                                                return (
+                                                    <Link
+                                                        key={`coreq-${index}`}
+                                                        href={`/courses/${formattedId}`}
+                                                        className="px-3 py-1.5 bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200 rounded-lg text-sm font-medium transition-colors cursor-pointer shadow-sm hover:shadow"
+                                                    >
+                                                        {formattedId}
+                                                    </Link>
+                                                );
+                                            })}
                                         </div>
                                     ) : (
                                         <p className="text-gray-500 text-sm italic py-2">None required</p>
@@ -200,12 +216,12 @@ export default function CourseDetailClient({ courseId, isModal = false }: Course
                                                             {section.crn}
                                                         </td>
                                                         <td className="px-4 py-3 text-gray-700">
-                                                            {section.meetingTimes}
+                                                            {formatMeetingTime(section.meetingTimes)}
                                                         </td>
                                                         <td className="px-4 py-3">
                                                             <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${section.seats.startsWith('0') || section.seats.includes('Full')
-                                                                    ? 'bg-red-100 text-red-800'
-                                                                    : 'bg-green-100 text-green-800'
+                                                                ? 'bg-red-100 text-red-800'
+                                                                : 'bg-green-100 text-green-800'
                                                                 }`}>
                                                                 {section.seats}
                                                             </span>
