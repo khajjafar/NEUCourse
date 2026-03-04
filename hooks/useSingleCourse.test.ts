@@ -1,11 +1,13 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { useSingleCourse } from './useSingleCourse';
+import { useSingleCourse, courseCache, inFlightPromises } from './useSingleCourse';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 describe('useSingleCourse', () => {
     beforeEach(() => {
         vi.resetAllMocks();
         global.fetch = vi.fn();
+        courseCache.clear();
+        inFlightPromises.clear();
     });
 
     it('should initialize with default states and not fetch if courseId is null', () => {

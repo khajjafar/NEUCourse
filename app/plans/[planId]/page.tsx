@@ -10,6 +10,61 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import AddSemesterModal from '@/components/AddSemesterModal';
 import QuickAddModal from '@/components/QuickAddModal';
 import { TrashIcon, PlusIcon, MagnifyingGlassPlusIcon } from '@heroicons/react/24/outline';
+import { fetchCourseCached } from '@/hooks/useSingleCourse';
+import { CourseAssignment } from '@/hooks/usePlanDetails';
+
+function SemesterCreditPill({ courses }: { courses: (string | CourseAssignment)[] }) {
+    const [credits, setCredits] = useState<number>(0);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        let mounted = true;
+
+        const fetchCredits = async () => {
+            setLoading(true);
+            let total = 0;
+            const courseIds = courses.map(c => typeof c === 'string' ? c : c.courseId);
+
+            if (courseIds.length === 0) {
+                if (mounted) { setCredits(0); setLoading(false); }
+                return;
+            }
+
+            try {
+                const responses = await Promise.all(
+                    courseIds.map(id => fetchCourseCached(id).catch(() => null))
+                );
+
+                for (const data of responses) {
+                    if (data?.creditHours) {
+                        const chr = Number(data.creditHours);
+                        if (!isNaN(chr)) total += chr;
+                    }
+                }
+
+                if (mounted) {
+                    setCredits(total);
+                    setLoading(false);
+                }
+            } catch (error) {
+                if (mounted) setLoading(false);
+            }
+        };
+
+        fetchCredits();
+        return () => { mounted = false; };
+    }, [courses]);
+
+    if (loading) {
+        return <span className="text-xs font-semibold text-gray-500 bg-gray-200/80 px-2 py-0.5 rounded-full animate-pulse w-10 h-5 inline-block"></span>;
+    }
+
+    return (
+        <span className="text-xs font-semibold text-gray-500 bg-gray-200/80 px-2 py-0.5 rounded-full">
+            {credits} {credits === 1 ? 'credit' : 'credits'}
+        </span>
+    );
+}
 
 export default function PlanDetailsPage() {
     const { user, loading: authLoading } = useAuth();
@@ -182,7 +237,7 @@ export default function PlanDetailsPage() {
                                                         {semester.name}
                                                     </h3>
                                                     <div className="flex items-center gap-2 shrink-0">
-                                                        <span className="text-xs font-semibold text-gray-500 bg-gray-200/80 px-2 py-0.5 rounded-full">{semester.courses.length}</span>
+                                                        <SemesterCreditPill courses={semester.courses} />
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
