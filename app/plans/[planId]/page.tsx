@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePlanDetails } from '@/hooks/usePlanDetails';
 import { useRouter, useParams } from 'next/navigation';
 import CourseMiniCard from '@/components/CourseMiniCard';
+import PrereqWarning from '@/components/PrereqWarning';
 import Link from 'next/link';
 
 export default function PlanDetailsPage() {
@@ -125,14 +126,20 @@ export default function PlanDetailsPage() {
                                     ) : (
                                         <div className="space-y-3">
                                             {semester.courses.map((courseId) => (
-                                                <CourseMiniCard
-                                                    key={courseId}
-                                                    courseId={courseId}
-                                                    onRemove={() => {
-                                                        removeCourseFromSemester(semester.id, courseId)
-                                                            .catch(err => alert(err.message));
-                                                    }}
-                                                />
+                                                <div key={courseId} className="flex flex-col">
+                                                    <CourseMiniCard
+                                                        courseId={courseId}
+                                                        onRemove={() => {
+                                                            removeCourseFromSemester(semester.id, courseId)
+                                                                .catch(err => alert(err.message));
+                                                        }}
+                                                    />
+                                                    <PrereqWarning
+                                                        courseId={courseId}
+                                                        semester={semester}
+                                                        allSemesters={plan.semesters}
+                                                    />
+                                                </div>
                                             ))}
                                         </div>
                                     )}
