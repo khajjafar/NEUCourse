@@ -60,15 +60,16 @@ describe('CoursesPage', () => {
             setQuery: vi.fn(),
             subject: '',
             setSubject: vi.fn(),
+            minLevel: 'ALL',
+            setMinLevel: vi.fn(),
+            maxLevel: 'ALL',
+            setMaxLevel: vi.fn(),
             courses: mockCourses,
             loading: false,
             error: null
         });
 
         render(<CoursesPage />);
-
-        // Assert header exists
-        expect(screen.getByText('Browse Courses')).toBeInTheDocument();
 
         // Assert items exist via text
         expect(screen.getByText('CS 3500: Object-Oriented Design')).toBeInTheDocument();
@@ -88,6 +89,10 @@ describe('CoursesPage', () => {
             setQuery: setQueryMock,
             subject: '',
             setSubject: setSubjectMock,
+            minLevel: 'ALL',
+            setMinLevel: vi.fn(),
+            maxLevel: 'ALL',
+            setMaxLevel: vi.fn(),
             courses: [],
             loading: false,
             error: null

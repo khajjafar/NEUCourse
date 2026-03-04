@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import AddToPlanDropdown from "./AddToPlanDropdown";
 
 // Helper to inject a space into compact IDs (e.g. "ACC2100" -> "ACC 2100")
 const formatCourseId = (id: string) => {
@@ -207,6 +208,7 @@ export default function CourseDetailClient({ courseId, isModal = false }: Course
                                                     <th className="px-4 py-3 font-semibold text-gray-600">Seats</th>
                                                     <th className="px-4 py-3 font-semibold text-gray-600 hidden sm:table-cell">Professor</th>
                                                     <th className="px-4 py-3 font-semibold text-gray-600 hidden md:table-cell">Location</th>
+                                                    <th className="px-4 py-3 font-semibold text-gray-600 relative"><span className="sr-only">Actions</span></th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100 bg-white">
@@ -231,6 +233,9 @@ export default function CourseDetailClient({ courseId, isModal = false }: Course
                                                         </td>
                                                         <td className="px-4 py-3 text-gray-500 hidden md:table-cell">
                                                             {section.rooms} {section.campus !== 'Boston' && `(${section.campus})`}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right">
+                                                            <AddToPlanDropdown courseId={course.id} crn={section.crn} />
                                                         </td>
                                                     </tr>
                                                 ))}

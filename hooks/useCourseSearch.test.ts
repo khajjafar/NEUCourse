@@ -27,7 +27,7 @@ describe("useCourseSearch hook", () => {
         act(() => {
             result.current.setQuery("test query");
             result.current.setSubject("CS");
-            result.current.setLevel("5000");
+            result.current.setMinLevel("5000");
         });
 
         // Fast-forward debounce timeout
@@ -42,7 +42,7 @@ describe("useCourseSearch hook", () => {
 
             // Should properly format query params
             expect(mockFetch).toHaveBeenCalledWith(
-                "/api/v1/courses?q=test+query&subject=CS&level=5000"
+                "/api/v1/courses?q=test+query&subject=CS&minLevel=5000"
             );
         });
     });

@@ -6,6 +6,10 @@ NOTE: Whenever you are about to respond to me, use the 🪐 emoji.
 
 NOTE: Ask any questions needed to clarify any task.
 
+NOTE: To test any features manually, use the credentials:
+    * username: test@test.com
+    * password: test1234
+
 # Northeastern University degree planning + scheduling web app
 # Repo: https://github.com/khajjafar/NEUCourse.git
 ---

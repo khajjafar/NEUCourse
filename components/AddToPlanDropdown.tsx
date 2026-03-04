@@ -8,9 +8,10 @@ import { PlusIcon } from '@heroicons/react/24/outline';
 
 interface AddToPlanDropdownProps {
     courseId: string;
+    crn?: string;
 }
 
-export default function AddToPlanDropdown({ courseId }: AddToPlanDropdownProps) {
+export default function AddToPlanDropdown({ courseId, crn }: AddToPlanDropdownProps) {
     const { user } = useAuth();
     const { plans, loading: plansLoading } = usePlans();
 
@@ -41,7 +42,7 @@ export default function AddToPlanDropdown({ courseId }: AddToPlanDropdownProps) 
     const handleSelectSemester = async (semId: string, semName: string) => {
         try {
             setIsAdding(true);
-            await addCourseToSemester(semId, courseId);
+            await addCourseToSemester(semId, courseId, crn);
             setSuccessMessage(`Added to ${semName}`);
             setTimeout(() => {
                 setIsOpen(false);
@@ -108,16 +109,19 @@ export default function AddToPlanDropdown({ courseId }: AddToPlanDropdownProps) 
                                     ← Back to Plans
                                 </button>
                                 {detailedPlan?.semesters && detailedPlan.semesters.length > 0 ? (
-                                    detailedPlan.semesters.map(sem => (
-                                        <button
-                                            key={sem.id}
-                                            onClick={() => handleSelectSemester(sem.id, sem.name)}
-                                            disabled={sem.courses.includes(courseId)}
-                                            className={`w-full text-left block px-4 py-2 text-sm ${sem.courses.includes(courseId) ? 'text-gray-400 bg-gray-50 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'}`}
-                                        >
-                                            {sem.name} {sem.courses.includes(courseId) && '(Added)'}
-                                        </button>
-                                    ))
+                                    detailedPlan.semesters.map(sem => {
+                                        const isAdded = sem.courses.some(c => typeof c === 'string' ? c === courseId : c.courseId === courseId);
+                                        return (
+                                            <button
+                                                key={sem.id}
+                                                onClick={() => handleSelectSemester(sem.id, sem.name)}
+                                                disabled={isAdded}
+                                                className={`w-full text-left block px-4 py-2 text-sm ${isAdded ? 'text-gray-400 bg-gray-50 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'}`}
+                                            >
+                                                {sem.name} {isAdded && '(Added)'}
+                                            </button>
+                                        );
+                                    })
                                 ) : (
                                     <div className="px-4 py-3 text-sm text-gray-500 text-center">
                                         No semesters in this plan.

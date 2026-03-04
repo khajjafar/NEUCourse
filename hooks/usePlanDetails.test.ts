@@ -116,7 +116,9 @@ describe('usePlanDetails Hook', () => {
         }));
 
         // Optimistic UI checks out
-        expect(result.current.plan?.semesters[0].courses).toContain('CS2510');
+        expect(result.current.plan?.semesters[0].courses).toEqual(
+            expect.arrayContaining([expect.objectContaining({ courseId: 'CS2510' })])
+        );
     });
 
     it('should remove a course from a semester optimistically', async () => {
@@ -152,6 +154,7 @@ describe('usePlanDetails Hook', () => {
         }));
 
         // Optimistic UI should reflect deletion
-        expect(result.current.plan?.semesters[0].courses).not.toContain('CS3500');
+        const isRemoved = !result.current.plan?.semesters[0].courses.some((c: any) => typeof c === 'string' ? c === 'CS3500' : c.courseId === 'CS3500');
+        expect(isRemoved).toBe(true);
     });
 });

@@ -9,6 +9,10 @@ vi.mock('next/navigation', () => ({
     useRouter: vi.fn(),
 }));
 
+vi.mock('./AddToPlanDropdown', () => ({
+    default: () => <button>Add to Plan</button>
+}));
+
 describe('CourseDetailClient', () => {
     const mockBack = vi.fn();
 
@@ -65,7 +69,7 @@ describe('CourseDetailClient', () => {
         expect(screen.getByText("CS 3500")).toBeInTheDocument();
         expect(screen.getByText("4 Credits")).toBeInTheDocument();
         expect(screen.getByText("A test class")).toBeInTheDocument();
-        expect(screen.getByText("CS2510")).toBeInTheDocument();
+        expect(screen.getByText("CS 2510")).toBeInTheDocument();
         expect(screen.getAllByText("None required").length).toBe(1); // Should only be 1 for Coreqs
     });
 

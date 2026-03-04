@@ -31,6 +31,9 @@ import { FieldValue } from 'firebase-admin/firestore';
  *               courseId:
  *                 type: string
  *                 example: CS3500
+ *               crn:
+ *                 type: string
+ *                 example: "10243"
  *     responses:
  *       200:
  *         description: Course added successfully
@@ -54,7 +57,7 @@ export async function POST(
     try {
         const { planId, semId } = await context.params;
         const body = await request.json();
-        const { courseId } = body;
+        const { courseId, crn } = body;
 
         if (!courseId || typeof courseId !== 'string' || courseId.trim() === '') {
             return errorResponse('Valid courseId is required', 'INVALID_INPUT', 400);
@@ -68,12 +71,16 @@ export async function POST(
             .collection('semesters')
             .doc(semId);
 
-        // Update the semester document safely by appending the course string
+        const coursePayload = crn
+            ? { courseId: courseId.trim(), crn: String(crn).trim() }
+            : { courseId: courseId.trim() }; // fallback
+
+        // Update the semester document safely by appending the course object
         await semesterRef.update({
-            courses: FieldValue.arrayUnion(courseId.trim())
+            courses: FieldValue.arrayUnion(coursePayload)
         });
 
-        return successResponse({ added: true, courseId: courseId.trim() });
+        return successResponse({ added: true, courseId: courseId.trim(), crn });
     } catch (err: any) {
         console.error('Error adding course to semester:', err);
         if (err.code === 5) { // GRPC NOT_FOUND equivalent in Firestore update()

@@ -2,11 +2,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Plan } from './usePlans';
 
+export interface CourseAssignment {
+    courseId: string;
+    crn?: string;
+}
+
 export interface Semester {
     id: string;
     name: string;
     order: number;
-    courses: string[]; // List of course IDs
+    courses: (string | CourseAssignment)[]; // List of course IDs or objects
 }
 
 export interface DetailedPlan extends Plan {
@@ -76,15 +81,19 @@ export function usePlanDetails(planId: string | null) {
         await fetchPlanDetails();
     };
 
-    const addCourseToSemester = async (semId: string, courseId: string) => {
+    const addCourseToSemester = async (semId: string, courseId: string, crn?: string) => {
         if (!user || !planId) throw new Error("Missing authentication or Plan ID.");
 
         // Optimistic UI update
         setPlan(prevPlan => {
             if (!prevPlan) return prevPlan;
             const updatedSemesters = prevPlan.semesters.map(sem => {
-                if (sem.id === semId && !sem.courses.includes(courseId)) {
-                    return { ...sem, courses: [...sem.courses, courseId] };
+                if (sem.id === semId) {
+                    const exists = sem.courses.some(c => typeof c === 'string' ? c === courseId : c.courseId === courseId);
+                    if (!exists) {
+                        const newPayload = crn ? { courseId, crn } : { courseId };
+                        return { ...sem, courses: [...sem.courses, newPayload] };
+                    }
                 }
                 return sem;
             });
@@ -98,7 +107,7 @@ export function usePlanDetails(planId: string | null) {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`
             },
-            body: JSON.stringify({ courseId })
+            body: JSON.stringify({ courseId, crn })
         });
 
         if (!response.ok) {
@@ -117,7 +126,7 @@ export function usePlanDetails(planId: string | null) {
             if (!prevPlan) return prevPlan;
             const updatedSemesters = prevPlan.semesters.map(sem => {
                 if (sem.id === semId) {
-                    return { ...sem, courses: sem.courses.filter(id => id !== courseId) };
+                    return { ...sem, courses: sem.courses.filter(c => typeof c === 'string' ? c !== courseId : c.courseId !== courseId) };
                 }
                 return sem;
             });

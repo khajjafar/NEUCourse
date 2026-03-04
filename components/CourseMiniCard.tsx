@@ -6,10 +6,11 @@ import Link from 'next/link';
 
 interface CourseMiniCardProps {
     courseId: string;
+    crn?: string;
     onRemove?: () => void;
 }
 
-export default function CourseMiniCard({ courseId, onRemove }: CourseMiniCardProps) {
+export default function CourseMiniCard({ courseId, crn, onRemove }: CourseMiniCardProps) {
     const { course, loading, error } = useSingleCourse(courseId);
 
     if (loading) {
@@ -42,6 +43,11 @@ export default function CourseMiniCard({ courseId, onRemove }: CourseMiniCardPro
             </Link>
 
             <div className="flex items-center space-x-4 flex-shrink-0">
+                {crn && (
+                    <span className="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-1 rounded shadow-sm">
+                        Sec: {crn}
+                    </span>
+                )}
                 <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded">
                     {course.creditHours} CR
                 </span>

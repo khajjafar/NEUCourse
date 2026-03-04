@@ -124,16 +124,21 @@ export default function PlanDetailsPage() {
                                         <p className="text-gray-500 text-sm italic py-4 text-center">No courses added yet.</p>
                                     ) : (
                                         <div className="space-y-3">
-                                            {semester.courses.map((courseId) => (
-                                                <CourseMiniCard
-                                                    key={courseId}
-                                                    courseId={courseId}
-                                                    onRemove={() => {
-                                                        removeCourseFromSemester(semester.id, courseId)
-                                                            .catch(err => alert(err.message));
-                                                    }}
-                                                />
-                                            ))}
+                                            {semester.courses.map((courseItem, idx) => {
+                                                const cid = typeof courseItem === 'string' ? courseItem : courseItem.courseId;
+                                                const crn = typeof courseItem === 'string' ? undefined : courseItem.crn;
+                                                return (
+                                                    <CourseMiniCard
+                                                        key={`${cid}-${idx}`}
+                                                        courseId={cid}
+                                                        crn={crn}
+                                                        onRemove={() => {
+                                                            removeCourseFromSemester(semester.id, cid)
+                                                                .catch(err => alert(err.message));
+                                                        }}
+                                                    />
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </div>
