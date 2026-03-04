@@ -20,7 +20,7 @@ test.describe('Authentication Elements', () => {
         await expect(page.getByRole('button', { name: 'Log In' })).toBeVisible();
 
         // Check guest access
-        const guestLink = page.locator('text=view courses as guest');
+        const guestLink = page.locator('text=View courses as a guest');
         await expect(guestLink).toBeVisible();
         await expect(guestLink).toHaveAttribute('href', '/courses');
     });
@@ -44,7 +44,7 @@ test.describe('Authentication Elements', () => {
         await expect(page.getByRole('button', { name: 'Sign Up' })).toBeVisible();
 
         // Check guest access
-        const guestLink = page.locator('text=view courses as guest');
+        const guestLink = page.locator('text=View courses as a guest');
         await expect(guestLink).toBeVisible();
         await expect(guestLink).toHaveAttribute('href', '/courses');
     });
