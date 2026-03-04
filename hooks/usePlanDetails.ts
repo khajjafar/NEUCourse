@@ -149,12 +149,65 @@ export function usePlanDetails(planId: string | null) {
         }
     };
 
+    const moveCourseBetweenSemesters = async (sourceSemId: string, destSemId: string, courseId: string, crn?: string) => {
+        if (!user || !planId) throw new Error("Missing authentication or Plan ID.");
+
+        // Optimistic UI update
+        setPlan(prevPlan => {
+            if (!prevPlan) return prevPlan;
+            const updatedSemesters = prevPlan.semesters.map(sem => {
+                if (sem.id === sourceSemId) {
+                    return { ...sem, courses: sem.courses.filter(c => typeof c === 'string' ? c !== courseId : c.courseId !== courseId) };
+                }
+                if (sem.id === destSemId) {
+                    const newPayload = crn ? { courseId, crn } : { courseId };
+                    // Avoid duplicate push
+                    const exists = sem.courses.some(c => typeof c === 'string' ? c === courseId : c.courseId === courseId);
+                    if (!exists) {
+                        return { ...sem, courses: [...sem.courses, newPayload] };
+                    }
+                }
+                return sem;
+            });
+            return { ...prevPlan, semesters: updatedSemesters };
+        });
+
+        const token = await user.getIdToken();
+
+        // Remove from source
+        const removeRes = await fetch(`/api/v1/plans/${planId}/semesters/${sourceSemId}/courses/${courseId}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!removeRes.ok) {
+            await fetchPlanDetails();
+            throw new Error('Failed to move course: remove stage failed');
+        }
+
+        // Add to dest
+        const addRes = await fetch(`/api/v1/plans/${planId}/semesters/${destSemId}/courses`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ courseId, crn })
+        });
+
+        if (!addRes.ok) {
+            await fetchPlanDetails();
+            throw new Error('Failed to move course: add stage failed');
+        }
+    };
+
     return {
         plan,
         loading: loading || authLoading,
         error,
         addSemester,
         addCourseToSemester,
-        removeCourseFromSemester
+        removeCourseFromSemester,
+        moveCourseBetweenSemesters
     };
 }
