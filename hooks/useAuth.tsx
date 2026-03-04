@@ -4,7 +4,9 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import {
     onAuthStateChanged,
     User,
-    signOut as firebaseSignOut
+    signOut as firebaseSignOut,
+    setPersistence,
+    browserLocalPersistence
 } from "firebase/auth";
 import { auth } from "../lib/firebase";
 import { useRouter } from "next/navigation";
@@ -27,6 +29,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
 
     useEffect(() => {
+        // Explicitly set persistence to fix multi-window issues
+        setPersistence(auth, browserLocalPersistence).catch((error) => {
+            console.error("Failed to set Firebase Auth persistence:", error);
+        });
+
         // Unsubscribe from auth state changes when unmounting
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser);

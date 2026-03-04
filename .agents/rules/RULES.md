@@ -121,7 +121,9 @@ CSS: Tailwind utility classes only. No custom CSS. No arbitrary values (e.g. `w-
 
 ## MUST FOLLOW: LOG FILE (REQUIRED)
 
-After creating/editing anything, update the log file in `docs/logs/`. Track modifications like git commit messages — unique ID, timestamp, concise description.
+* After creating/editing anything, update the log file in `docs/logs/`. Track modifications like git commit messages — unique ID, timestamp, concise description.
+
+* These logs should also be commented on the specific github issue that is being worked on and once complete, merge with the branch the feature branch is built off of.
 
 **NEVER SKIP THIS**
 
@@ -203,6 +205,7 @@ Types: `feat`, `fix`, `chore`, `docs`, `test`, `refactor`, `style`
 - Write tests alongside features — not at the end.
 - Use environment variables for all secrets. Commit `.env.example` with placeholders.
 - Use `ics` for calendar export (client-side only).
+- Use the browser to verify functionality and design.
 
 **DON'T:**
 - Import `firebase-admin` in any client component.

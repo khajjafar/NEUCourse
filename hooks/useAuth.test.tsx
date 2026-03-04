@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useAuth, AuthProvider } from './useAuth';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, User } from 'firebase/auth';
 
 // Mock Firebase
 vi.mock('firebase/auth', () => {
@@ -9,6 +9,8 @@ vi.mock('firebase/auth', () => {
         onAuthStateChanged: vi.fn(),
         signOut: vi.fn(),
         getAuth: vi.fn(),
+        setPersistence: vi.fn(() => Promise.resolve()),
+        browserLocalPersistence: 'browserLocalPersistence',
     };
 });
 vi.mock('../lib/firebase', () => ({
@@ -20,14 +22,16 @@ describe('useAuth hook', () => {
         vi.clearAllMocks();
     });
 
-    it('provides initial loading state', () => {
+    it('provides initial loading state and sets persistence', () => {
         // onAuthStateChanged returns a mock unsubscribe function
-        vi.mocked(onAuthStateChanged).mockImplementationOnce((auth, callback) => {
+        vi.mocked(onAuthStateChanged).mockImplementationOnce((_auth, _callback) => {
             // Don't call the callback immediately to simulate loading
             return vi.fn();
         });
 
         const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+
+        expect(setPersistence).toHaveBeenCalledWith({}, 'browserLocalPersistence');
         expect(result.current.loading).toBe(true);
         expect(result.current.user).toBeNull();
     });
@@ -35,9 +39,9 @@ describe('useAuth hook', () => {
     it('updates state when user logs in', async () => {
         const mockUser = { uid: '123', email: 'test@example.com' };
 
-        vi.mocked(onAuthStateChanged).mockImplementationOnce((auth, callback) => {
+        vi.mocked(onAuthStateChanged).mockImplementationOnce((_auth, callback) => {
             // Simulate immediate auth change event
-            callback(mockUser as any);
+            (callback as (user: User | null) => void)(mockUser as unknown as User);
             return vi.fn();
         });
 
@@ -48,8 +52,8 @@ describe('useAuth hook', () => {
     });
 
     it('calls signOut correctly', async () => {
-        vi.mocked(onAuthStateChanged).mockImplementationOnce((auth, callback) => {
-            callback(null);
+        vi.mocked(onAuthStateChanged).mockImplementationOnce((_auth, callback) => {
+            (callback as (user: User | null) => void)(null);
             return vi.fn();
         });
         vi.mocked(signOut).mockResolvedValueOnce();
