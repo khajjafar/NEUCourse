@@ -83,6 +83,12 @@ export default function LoginPage() {
                     >
                         Log In
                     </button>
+
+                    <div className="text-center pt-2">
+                        <Link href="/courses" className="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">
+                            view courses as guest
+                        </Link>
+                    </div>
                 </form>
             </div>
         </main>
