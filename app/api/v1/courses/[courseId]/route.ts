@@ -1,51 +1,57 @@
-import { NextRequest } from 'next/server';
-import { adminDb } from '@/lib/firebase-admin';
-import { successResponse, errorResponse } from '@/lib/api-helpers';
+import { NextRequest, NextResponse } from "next/server";
+import { adminDb } from "@/lib/firebase-admin";
 
 /**
  * @swagger
  * /api/v1/courses/{courseId}:
  *   get:
- *     summary: Get detailed information for a specific course.
+ *     summary: Retrieve a single course detail
+ *     description: Returns the full document for a specific course by its Firestore ID.
  *     parameters:
  *       - in: path
  *         name: courseId
  *         required: true
  *         schema:
  *           type: string
- *         description: The Firestore ID of the course
+ *         description: The course ID (e.g. CS3500)
  *     responses:
  *       200:
  *         description: Course data
  *       404:
  *         description: Course not found
- *       500:
- *         description: Internal server error
  */
 export async function GET(
     request: NextRequest,
-    { params }: { params: Promise<{ courseId: string }> }
+    context: { params: Promise<{ courseId: string }> }
 ) {
     try {
-        const { courseId } = await params;
+        const { courseId } = await context.params;
 
         if (!courseId) {
-            return errorResponse('BAD_REQUEST', 'Missing courseId parameter', 400);
+            return NextResponse.json({
+                error: { code: "BAD_REQUEST", message: "courseId parameter is required" }
+            }, { status: 400 });
         }
 
-        const docRef = adminDb.collection('courses').doc(courseId);
-        const docSnap = await docRef.get();
+        // Decode the URI component to handle cases like 'CS%205002' -> 'CS 5002'
+        const decodedId = decodeURIComponent(courseId);
+        // Normalize to removing all spaces and dashes, converting to uppercase (e.g., 'cs 5002' -> 'CS5002')
+        const normalizedId = decodedId.replace(/[\\s\\-]+/g, '').toUpperCase();
 
-        if (!docSnap.exists) {
-            return errorResponse('NOT_FOUND', 'Course not found', 404);
+        const courseDoc = await adminDb.collection("courses").doc(normalizedId).get();
+
+        if (!courseDoc.exists) {
+            return NextResponse.json({
+                error: { code: "NOT_FOUND", message: `Course ${decodedId} not found.` }
+            }, { status: 404 });
         }
 
-        return successResponse({
-            id: docSnap.id,
-            ...docSnap.data(),
-        });
-    } catch (error) {
-        console.error('Error fetching course detail:', error);
-        return errorResponse('INTERNAL_SERVER_ERROR', 'Failed to fetch course detail', 500);
+        return NextResponse.json({ data: courseDoc.data() }, { status: 200 });
+
+    } catch (error: any) {
+        console.error(`API /courses/[courseId] error:`, error);
+        return NextResponse.json({
+            error: { code: "SERVER_ERROR", message: "Failed to fetch course details." }
+        }, { status: 500 });
     }
 }

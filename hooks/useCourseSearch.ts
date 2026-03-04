@@ -1,64 +1,79 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-export interface Course {
+export interface ClassSection {
+    crn: string;
+    seats: string;
+    meetingTimes: string;
+    rooms: string;
+    professor: string;
+    campus: string;
+}
+
+export interface CourseData {
     id: string;
-    name?: string;
-    courseName?: string;
-    number?: string;
-    courseNumber?: string;
-    subject?: string;
-    credits?: number;
-    creditHours?: number;
-    description?: string;
-    prereqs?: string[];
-    coreqs?: string[];
+    subject: string;
+    number: string;
+    name: string;
+    description: string;
+    creditHours: number;
+    prereqs: string[];
+    coreqs: string[];
+    sections?: ClassSection[];
 }
 
 export function useCourseSearch() {
-    const [searchQuery, setSearchQuery] = useState('');
-    const [subjectFilter, setSubjectFilter] = useState('');
-    const [results, setResults] = useState<Course[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [query, setQuery] = useState("");
+    const [subject, setSubject] = useState("");
+    const [level, setLevel] = useState("");
+    const [courses, setCourses] = useState<CourseData[]>([]);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchCourses = useCallback(async (query: string, subject: string) => {
-        setIsLoading(true);
-        setError(null);
-        try {
-            const params = new URLSearchParams();
-            if (query) params.append('q', query);
-            if (subject) params.append('subject', subject);
-
-            const res = await fetch(`/api/v1/courses?${params.toString()}`);
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data?.error?.message || 'Failed to fetch courses');
-            }
-
-            setResults(data.data || []);
-        } catch (err: any) {
-            setError(err.message || 'An unexpected error occurred');
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
     useEffect(() => {
-        const handler = setTimeout(() => {
-            fetchCourses(searchQuery, subjectFilter);
-        }, 300); // 300ms debounce
+        const fetchCourses = async () => {
+            setLoading(true);
+            setError(null);
 
-        return () => clearTimeout(handler);
-    }, [searchQuery, subjectFilter, fetchCourses]);
+            try {
+                const searchParams = new URLSearchParams();
+                if (query) searchParams.append("q", query);
+                if (subject) searchParams.append("subject", subject);
+                if (level) searchParams.append("level", level);
+
+                const res = await fetch(`/api/v1/courses?${searchParams.toString()}`);
+
+                if (!res.ok) {
+                    throw new Error("Failed to fetch courses");
+                }
+
+                const json = await res.json();
+                if (json.error) {
+                    throw new Error(json.error.message);
+                }
+
+                setCourses(json.data || []);
+            } catch (err: any) {
+                setError(err.message || "An unknown error occurred.");
+                setCourses([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const timeoutId = setTimeout(fetchCourses, 300); // 300ms debounce
+        return () => clearTimeout(timeoutId);
+
+    }, [query, subject, level]);
 
     return {
-        searchQuery,
-        setSearchQuery,
-        subjectFilter,
-        setSubjectFilter,
-        results,
-        isLoading,
-        error,
+        query,
+        setQuery,
+        subject,
+        setSubject,
+        level,
+        setLevel,
+        courses,
+        loading,
+        error
     };
 }

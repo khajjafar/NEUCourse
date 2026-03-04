@@ -1,25 +1,42 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth } from './firebase-admin';
+import { NextResponse } from 'next/server';
 
-export function successResponse(data: unknown, status = 200) {
-    return NextResponse.json({ data }, { status });
-}
-
-export function errorResponse(code: string, message: string, status = 400) {
-    return NextResponse.json({ error: { code, message } }, { status });
-}
-
-export async function verifyAuth(request: NextRequest) {
+/**
+ * Extracts and verifies the Firebase JWT from the Authorization header.
+ * @param request The incoming Next.js API Request
+ * @returns Object containing the decoded user token or an error string
+ */
+export async function verifyAuth(request: Request) {
     const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-        return { error: errorResponse('UNAUTHORIZED', 'Missing or invalid token', 401) };
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return { user: null, error: 'Unauthorized: Missing or invalid token' };
     }
 
     const token = authHeader.split('Bearer ')[1];
+
     try {
         const decodedToken = await adminAuth.verifyIdToken(token);
-        return { uid: decodedToken.uid };
+        return { user: decodedToken, error: null };
     } catch (error) {
-        return { error: errorResponse('UNAUTHORIZED', 'Invalid or expired token', 401) };
+        console.error('Error verifying auth token:', error);
+        return { user: null, error: 'Unauthorized: Invalid token' };
     }
+}
+
+/**
+ * Standardized JSON structure for API error responses.
+ */
+export function errorResponse(message: string, code: string = 'BAD_REQUEST', status: number = 400) {
+    return NextResponse.json(
+        { error: { code, message } },
+        { status }
+    );
+}
+
+/**
+ * Standardized JSON structure for API success responses.
+ */
+export function successResponse(data: unknown, status: number = 200) {
+    return NextResponse.json({ data }, { status });
 }
