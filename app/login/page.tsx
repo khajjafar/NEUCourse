@@ -86,7 +86,7 @@ export default function LoginPage() {
 
                     <div className="text-center pt-2">
                         <Link href="/courses" className="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">
-                            view courses as guest
+                            View courses as a guest
                         </Link>
                     </div>
                 </form>
