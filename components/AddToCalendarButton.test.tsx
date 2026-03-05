@@ -48,7 +48,7 @@ describe('AddToCalendarButton', () => {
         fireEvent.click(screen.getByRole('button', { name: 'Add course schedule to calendar' }));
 
         await waitFor(() => {
-            expect(screen.getByText('Cannot parse schedule')).toBeDefined();
+            expect(screen.getByText('No schedule available')).toBeDefined();
         });
     });
 

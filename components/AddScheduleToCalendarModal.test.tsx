@@ -71,7 +71,23 @@ describe('AddScheduleToCalendarModal', () => {
         expect(container.firstChild).toBeNull();
     });
 
-    test('shows all courses for selected semester with or without CRNs', async () => {
+    test('shows "No courses in this semester have a specific section selected" when no CRNs are selected', async () => {
+        const semesterNoCrns = [{
+            id: 'sem2',
+            name: 'Spring 2027',
+            order: 1,
+            courses: ['CS2500', 'NOSECTIONS']
+        }];
+        render(<AddScheduleToCalendarModal isOpen={true} onClose={vi.fn()} semesters={semesterNoCrns} />);
+
+        fireEvent.change(screen.getByLabelText('Select Semester'), { target: { value: 'sem2' } });
+
+        await waitFor(() => {
+            expect(screen.getByText(/No courses in this semester have a specific section selected/)).toBeDefined();
+        });
+    });
+
+    test('shows ONLY courses with pre-selected sections', async () => {
         render(<AddScheduleToCalendarModal isOpen={true} onClose={vi.fn()} semesters={mockSemesters} />);
 
         // Select the semester
@@ -79,40 +95,15 @@ describe('AddScheduleToCalendarModal', () => {
 
         // Wait for courses to load and render
         await waitFor(() => {
-            expect(screen.getByText('CS2500')).toBeDefined();
+            // CS2510 has a CRN, should be displayed
             expect(screen.getByText('CS2510')).toBeDefined();
-            expect(screen.getByText('NOSECTIONS')).toBeDefined();
+            // CS2500 and NOSECTIONS do not have a CRN, should NOT be displayed
+            expect(screen.queryByText('CS2500')).toBeNull();
+            expect(screen.queryByText('NOSECTIONS')).toBeNull();
         });
     });
 
-    test('shows section dropdown when course has sections', async () => {
-        render(<AddScheduleToCalendarModal isOpen={true} onClose={vi.fn()} semesters={mockSemesters} />);
-
-        // Select the semester
-        fireEvent.change(screen.getByLabelText('Select Semester'), { target: { value: 'sem1' } });
-
-        await waitFor(() => {
-            // Check if dropdown exists with the correct options
-            const cs2500Select = screen.getByRole('combobox', { name: 'Select section for CS2500' });
-            expect(cs2500Select).toBeDefined();
-
-            // Should contain the default option plus the 2 sections
-            expect(cs2500Select.children.length).toBe(3);
-            expect(screen.getByText('CRN 10001 - MWF 10:00am - 11:00am')).toBeDefined();
-        });
-    });
-
-    test('shows "No sections available" message when course has no sections', async () => {
-        render(<AddScheduleToCalendarModal isOpen={true} onClose={vi.fn()} semesters={mockSemesters} />);
-
-        fireEvent.change(screen.getByLabelText('Select Semester'), { target: { value: 'sem1' } });
-
-        await waitFor(() => {
-            expect(screen.getByText('No sections available')).toBeDefined();
-        });
-    });
-
-    test('Add to Calendar button appears only when a section is selected', async () => {
+    test('Add to Calendar button appears for pre-selected sections', async () => {
         render(<AddScheduleToCalendarModal isOpen={true} onClose={vi.fn()} semesters={mockSemesters} />);
 
         fireEvent.change(screen.getByLabelText('Select Semester'), { target: { value: 'sem1' } });
@@ -120,18 +111,6 @@ describe('AddScheduleToCalendarModal', () => {
         await waitFor(() => {
             // CS2510 has a pre-selected CRN of 12345 so button should appear
             expect(screen.getByTestId('add-btn-CS2510-12345')).toBeDefined();
-
-            // CS2500 has NO pre-selected CRN, so button should NOT be there yet
-            expect(screen.queryByTestId(/add-btn-CS2500/)).toBeNull();
-        });
-
-        // Now select a section for CS2500
-        const cs2500Select = screen.getByRole('combobox', { name: 'Select section for CS2500' });
-        fireEvent.change(cs2500Select, { target: { value: '10002' } });
-
-        // Wait for rerender and verify button appeared
-        await waitFor(() => {
-            expect(screen.getByTestId('add-btn-CS2500-10002')).toBeDefined();
         });
     });
 });

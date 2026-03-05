@@ -53,24 +53,30 @@ export function AddToCalendarButton({ courseId, crn, courseName }: AddToCalendar
                 return;
             }
 
-            const parsed = parseMeetingTime(section.meetingTimes);
-            if (!parsed) {
+            const parsedSchedules = parseMeetingTime(section.meetingTimes);
+            if (!parsedSchedules) {
                 setStatus('error');
-                setErrorMsg('Cannot parse schedule');
+                if (section.meetingTimes?.trim().toUpperCase() === 'TBA') {
+                    setErrorMsg('No schedule available');
+                } else {
+                    setErrorMsg('Cannot parse schedule');
+                }
                 return;
             }
 
-            for (const day of parsed.days) {
-                const start = getNextDateForDayAndTime(day, parsed.startTime).toISOString();
-                const end = getNextDateForDayAndTime(day, parsed.endTime).toISOString();
+            for (const parsed of parsedSchedules) {
+                for (const day of parsed.days) {
+                    const start = getNextDateForDayAndTime(day, parsed.startTime).toISOString();
+                    const end = getNextDateForDayAndTime(day, parsed.endTime).toISOString();
 
-                await addEvent({
-                    title: courseName,
-                    startTime: start,
-                    endTime: end,
-                    location: section.rooms || '',
-                    color: 'blue',
-                });
+                    await addEvent({
+                        title: courseName,
+                        startTime: start,
+                        endTime: end,
+                        location: section.rooms || '',
+                        color: 'blue',
+                    });
+                }
             }
 
             setStatus('success');
