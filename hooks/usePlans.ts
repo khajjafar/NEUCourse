@@ -92,5 +92,25 @@ export function usePlans() {
         setPlans(prev => prev.filter(p => p.id !== planId));
     };
 
-    return { plans, loading: loading || authLoading, error, createPlan, deletePlan };
+    const renamePlan = async (planId: string, newName: string): Promise<void> => {
+        if (!user) throw new Error("Must be logged in to rename a plan.");
+        const token = await user.getIdToken();
+        const response = await fetch(`/api/v1/plans/${planId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ name: newName })
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error?.message || 'Failed to rename plan');
+        }
+
+        setPlans(prev => prev.map(p => p.id === planId ? { ...p, name: newName } : p));
+    };
+
+    return { plans, loading: loading || authLoading, error, createPlan, deletePlan, renamePlan };
 }

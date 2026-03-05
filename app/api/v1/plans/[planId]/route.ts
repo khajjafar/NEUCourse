@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { verifyAuth, errorResponse, successResponse } from '@/lib/api-helpers';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export const dynamic = 'force-dynamic';
 
@@ -114,5 +115,81 @@ export async function DELETE(
     } catch (err) {
         console.error('Error deleting plan:', err);
         return errorResponse('Failed to delete degree plan', 'INTERNAL_SERVER_ERROR', 500);
+    }
+}
+
+/**
+ * @swagger
+ * /api/v1/plans/{planId}:
+ *   put:
+ *     summary: Rename a specific degree plan
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: planId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Plan renamed successfully
+ *       400:
+ *         description: Missing or invalid name
+ *       404:
+ *         description: Plan not found
+ */
+export async function PUT(
+    request: NextRequest,
+    context: { params: Promise<{ planId: string }> }
+) {
+    const { user, error } = await verifyAuth(request);
+
+    if (error || !user) {
+        return errorResponse(error || 'Unauthorized', 'UNAUTHORIZED', 401);
+    }
+
+    try {
+        const { planId } = await context.params;
+        const body = await request.json().catch(() => ({}));
+
+        if (!body.name || typeof body.name !== 'string' || body.name.trim() === '') {
+            return errorResponse('Valid plan name is required', 'BAD_REQUEST', 400);
+        }
+
+        const newName = body.name.trim();
+
+        const planRef = adminDb
+            .collection('users')
+            .doc(user.uid)
+            .collection('plans')
+            .doc(planId);
+
+        const planDoc = await planRef.get();
+
+        if (!planDoc.exists) {
+            return errorResponse(`Plan ${planId} not found.`, 'NOT_FOUND', 404);
+        }
+
+        await planRef.update({
+            name: newName,
+            updatedAt: FieldValue.serverTimestamp()
+        });
+
+        return successResponse({ id: planId, name: newName });
+    } catch (err) {
+        console.error('Error renaming plan:', err);
+        return errorResponse('Failed to rename degree plan', 'INTERNAL_SERVER_ERROR', 500);
     }
 }

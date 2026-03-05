@@ -8,11 +8,15 @@ import Link from 'next/link';
 
 export default function PlansPage() {
     const { user, loading: authLoading } = useAuth();
-    const { plans, loading: plansLoading, error, createPlan, deletePlan } = usePlans();
+    const { plans, loading: plansLoading, error, createPlan, deletePlan, renamePlan } = usePlans();
     const router = useRouter();
 
     const [newPlanName, setNewPlanName] = useState('');
     const [isCreating, setIsCreating] = useState(false);
+
+    const [renamingId, setRenamingId] = useState<string | null>(null);
+    const [renameValue, setRenameValue] = useState('');
+    const [isRenaming, setIsRenaming] = useState(false);
 
     useEffect(() => {
         if (!authLoading && !user) {
@@ -33,6 +37,24 @@ export default function PlansPage() {
             alert('Failed to create plan.');
         } finally {
             setIsCreating(false);
+        }
+    };
+
+    const handleRename = async (planId: string) => {
+        if (!renameValue.trim()) return;
+        try {
+            setIsRenaming(true);
+            await renamePlan(planId, renameValue.trim());
+            setRenamingId(null);
+        } catch (err: unknown) {
+            console.error('Failed to rename plan:', err);
+            if (err instanceof Error) {
+                alert(err.message);
+            } else {
+                alert('Failed to rename plan.');
+            }
+        } finally {
+            setIsRenaming(false);
         }
     };
 
@@ -117,16 +139,59 @@ export default function PlansPage() {
                                     <div className="px-4 py-4 flex items-center sm:px-6 hover:bg-gray-50 transition-colors">
                                         <div className="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
                                             <div className="truncate">
-                                                <div className="flex text-sm">
-                                                    <p className="font-semibold text-indigo-600 hover:text-indigo-800 truncate">
-                                                        <Link href={`/plans/${plan.id}`}>
-                                                            {plan.name}
-                                                        </Link>
-                                                    </p>
+                                                <div className="flex text-sm w-full">
+                                                    {renamingId === plan.id ? (
+                                                        <div className="flex items-center space-x-2 w-full">
+                                                            <input
+                                                                type="text"
+                                                                autoFocus
+                                                                className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md py-1 px-2 border"
+                                                                value={renameValue}
+                                                                onChange={(e) => setRenameValue(e.target.value)}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter') handleRename(plan.id);
+                                                                    if (e.key === 'Escape') setRenamingId(null);
+                                                                }}
+                                                                disabled={isRenaming}
+                                                            />
+                                                            <button
+                                                                onClick={() => handleRename(plan.id)}
+                                                                disabled={isRenaming}
+                                                                className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                                                            >
+                                                                Save
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setRenamingId(null)}
+                                                                disabled={isRenaming}
+                                                                className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded shadow-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="font-semibold text-indigo-600 hover:text-indigo-800 truncate">
+                                                            <Link href={`/plans/${plan.id}`}>
+                                                                {plan.name}
+                                                            </Link>
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
                                         <div className="ml-5 flex-shrink-0 flex items-center space-x-4">
+                                            {renamingId !== plan.id && (
+                                                <button
+                                                    onClick={() => {
+                                                        setRenamingId(plan.id);
+                                                        setRenameValue(plan.name);
+                                                    }}
+                                                    className="text-gray-500 hover:text-indigo-600 text-sm font-medium"
+                                                    aria-label={`Rename ${plan.name}`}
+                                                >
+                                                    Rename
+                                                </button>
+                                            )}
                                             <Link
                                                 href={`/plans/${plan.id}`}
                                                 className="px-3 py-1 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
