@@ -51,7 +51,7 @@ export default function DashboardPage() {
                                                 <Link key={plan.id} href={`/plans/${plan.id}`} className="block border border-gray-200 rounded-lg p-4 hover:border-indigo-300 hover:bg-indigo-50 transition-colors">
                                                     <div className="flex justify-between items-center">
                                                         <h3 className="font-semibold text-gray-900">{plan.name}</h3>
-                                                        <span className="text-sm text-gray-500">{plan.semesters?.length || 0} Semesters</span>
+                                                        <span className="text-sm text-gray-500">{plan.semesterCount || 0} Semesters</span>
                                                     </div>
                                                 </Link>
                                             ))}
