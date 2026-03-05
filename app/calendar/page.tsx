@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { AuthGuard } from '@/components/AuthGuard';
 import WeeklyCalendar from '@/components/WeeklyCalendar';
 import EventForm from '@/components/EventForm';
+import ExportCalendarButton from '@/components/ExportCalendarButton';
 import { useCalendarEvents, CalendarEvent } from '@/hooks/useCalendarEvents';
 
 export default function CalendarPage() {
@@ -88,15 +89,18 @@ export default function CalendarPage() {
                             Manage your weekly classes and activities.
                         </p>
                     </div>
-                    <button
-                        onClick={handleAddClick}
-                        className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 shadow-sm transition-colors"
-                    >
-                        <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                        </svg>
-                        Add Event
-                    </button>
+                    <div className="flex space-x-3">
+                        <ExportCalendarButton events={events} />
+                        <button
+                            onClick={handleAddClick}
+                            className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 shadow-sm transition-colors"
+                        >
+                            <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                            </svg>
+                            Add Event
+                        </button>
+                    </div>
                 </div>
 
                 <div className="flex items-center justify-between mb-4">
