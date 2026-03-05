@@ -12,7 +12,8 @@ import QuickAddModal from '@/components/QuickAddModal';
 import { TrashIcon, PlusIcon, MagnifyingGlassPlusIcon } from '@heroicons/react/24/outline';
 import { fetchCourseCached } from '@/hooks/useSingleCourse';
 import { CourseAssignment } from '@/hooks/usePlanDetails';
-
+import { CalendarIcon } from '@heroicons/react/24/outline';
+import AddScheduleToCalendarModal from '@/components/AddScheduleToCalendarModal';
 function SemesterCreditPill({ courses }: { courses: (string | CourseAssignment)[] }) {
     const [credits, setCredits] = useState<number>(0);
     const [loading, setLoading] = useState(true);
@@ -87,6 +88,7 @@ export default function PlanDetailsPage() {
 
     const [isAddSemesterOpen, setIsAddSemesterOpen] = useState(false);
     const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+    const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
     const [isBrowser, setIsBrowser] = useState(false);
 
     useEffect(() => {
@@ -186,6 +188,13 @@ export default function PlanDetailsPage() {
                         </h2>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-3 md:mt-0 md:ml-4">
+                        <button
+                            onClick={() => setIsCalendarModalOpen(true)}
+                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                        >
+                            <CalendarIcon className="-ml-1 mr-2 h-5 w-5 text-gray-400" />
+                            Add to Calendar
+                        </button>
                         <button
                             onClick={() => setIsQuickAddOpen(true)}
                             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
@@ -318,6 +327,12 @@ export default function PlanDetailsPage() {
                 </DragDropContext>
 
                 {/* Modals */}
+                <AddScheduleToCalendarModal
+                    isOpen={isCalendarModalOpen}
+                    onClose={() => setIsCalendarModalOpen(false)}
+                    semesters={plan.semesters || []}
+                />
+
                 <AddSemesterModal
                     planId={planId}
                     isOpen={isAddSemesterOpen}
