@@ -266,8 +266,79 @@ async function scrapeSearchNeu(limit: number = 0): Promise<Course[]> {
                                 const seatsMatch = rawSeats.match(/(\d+)\s*\/\s*(\d+)/);
                                 const seats = seatsMatch ? `${seatsMatch[1]} / ${seatsMatch[2]}` : rawSeats.trim();
 
-                                const rawTime = await tds.nth(3).innerText();
-                                const timeText = rawTime.trim().replace(/\s+/g, ' ');
+                                const timeData = await tds.nth(3).evaluate((td) => {
+                                    const meetingGroups = Array.from(td.querySelectorAll('div.flex.w-full.flex-col.gap-1'));
+
+                                    if (meetingGroups.length > 0) {
+                                        const parsedMeetings: string[] = [];
+
+                                        meetingGroups.forEach(group => {
+                                            const spans = group.querySelectorAll('span.flex.items-center.gap-1');
+                                            let activeDays: string[] = [];
+                                            let timeString = '';
+
+                                            if (spans.length >= 2) {
+                                                const daysSpan = spans[0];
+                                                const timeSpan = spans[1];
+
+                                                Array.from(daysSpan.children).forEach((child, index) => {
+                                                    if (child.classList.contains('text-neu9')) {
+                                                        if (index === 0) activeDays.push('M');
+                                                        else if (index === 1) activeDays.push('T');
+                                                        else if (index === 2) activeDays.push('W');
+                                                        else if (index === 3) activeDays.push('Th');
+                                                        else if (index === 4) activeDays.push('F');
+                                                        else if (index === 5) activeDays.push('S');
+                                                        else if (index === 6) activeDays.push('U');
+                                                    }
+                                                });
+
+                                                timeString = timeSpan.textContent ? timeSpan.textContent.trim().replace(/\s+/g, ' ') : '';
+                                            } else if (spans.length === 1) {
+                                                // It might just be "TBA"
+                                                timeString = spans[0].textContent ? spans[0].textContent.trim() : '';
+                                            }
+
+                                            // Handle edge cases where days are embedded differently
+                                            if (activeDays.length > 0) {
+                                                parsedMeetings.push(`${activeDays.join(',')}${timeString ? ' ' + timeString : ''}`);
+                                            } else {
+                                                if (timeString) parsedMeetings.push(timeString);
+                                            }
+                                        });
+
+                                        return parsedMeetings.length > 0 ? parsedMeetings.join('; ') : td.textContent?.trim() || '';
+                                    }
+
+                                    // Fallback to simple DOM parsing if layout is simpler
+                                    const daysSpan = td.querySelector('span.flex.items-center.gap-1');
+                                    let activeDays: string[] = [];
+
+                                    if (daysSpan) {
+                                        Array.from(daysSpan.children).forEach((child, index) => {
+                                            if (child.classList.contains('text-neu9')) {
+                                                if (index === 0) activeDays.push('M');
+                                                else if (index === 1) activeDays.push('T');
+                                                else if (index === 2) activeDays.push('W');
+                                                else if (index === 3) activeDays.push('Th');
+                                                else if (index === 4) activeDays.push('F');
+                                                else if (index === 5) activeDays.push('S');
+                                                else if (index === 6) activeDays.push('U');
+                                            }
+                                        });
+                                    }
+
+                                    let rawTimeText = td.textContent || '';
+                                    rawTimeText = rawTimeText.replace(/M\s*T\s*W\s*T\s*F/gi, '').trim();
+
+                                    if (activeDays.length > 0) {
+                                        return `${activeDays.join(',')}${rawTimeText ? ' ' + rawTimeText.replace(/\s+/g, ' ') : ''}`;
+                                    } else {
+                                        return td.textContent ? td.textContent.trim().replace(/\s+/g, ' ') : '';
+                                    }
+                                });
+
+                                const timeText = timeData;
 
                                 const rooms = (await tds.nth(4).innerText()).trim();
                                 const professor = (await tds.nth(5).innerText()).trim();
