@@ -35,11 +35,11 @@ export default function CourseMiniCard({ courseId, crn, onRemove, allPlanCourses
         );
     }
 
-    const hasMissingPrereqs = course && allPlanCourses && currentSemesterOrder ?
-        course.prereqs.some(pr => !allPlanCourses.some(c => c.courseId === pr && c.semesterOrder < currentSemesterOrder)) : false;
+    const missingPrereqs: string[] = course && allPlanCourses && currentSemesterOrder ?
+        course.prereqs.filter(pr => !allPlanCourses.some(c => c.courseId === pr && c.semesterOrder < currentSemesterOrder)) : [];
 
-    const hasMissingCoreqs = course && allPlanCourses && currentSemesterOrder ?
-        course.coreqs.some(cr => !allPlanCourses.some(c => c.courseId === cr && c.semesterOrder <= currentSemesterOrder)) : false;
+    const missingCoreqs: string[] = course && allPlanCourses && currentSemesterOrder ?
+        course.coreqs.filter(cr => !allPlanCourses.some(c => c.courseId === cr && c.semesterOrder <= currentSemesterOrder)) : [];
 
     return (
         <div className="group relative flex flex-col p-3 bg-white rounded-lg border border-gray-200 shadow-sm hover:border-gray-300 transition-colors">
@@ -72,14 +72,22 @@ export default function CourseMiniCard({ courseId, crn, onRemove, allPlanCourses
 
             <div className="flex justify-between items-end mt-1">
                 <div className="flex flex-col gap-1 items-start">
-                    {hasMissingPrereqs && (
-                        <span className="text-[10px] font-bold text-orange-600 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded shadow-sm">
-                            Missing Prereq
+                    {missingPrereqs.length > 0 && (
+                        <span
+                            className="text-[10px] font-bold text-orange-600 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded shadow-sm"
+                            aria-label={`Missing prerequisites: ${missingPrereqs.join(", ")}`}
+                            title={`Prereq needed: ${missingPrereqs.join(", ")}`}
+                        >
+                            Prereq needed: {missingPrereqs.join(", ")}
                         </span>
                     )}
-                    {hasMissingCoreqs && (
-                        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded shadow-sm">
-                            Coreq not in this semester
+                    {missingCoreqs.length > 0 && (
+                        <span
+                            className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded shadow-sm"
+                            aria-label={`Missing corequisites: ${missingCoreqs.join(", ")}`}
+                            title={`Coreq needed: ${missingCoreqs.join(", ")}`}
+                        >
+                            Coreq needed: {missingCoreqs.join(", ")}
                         </span>
                     )}
                 </div>
