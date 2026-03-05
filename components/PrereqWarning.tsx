@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useSingleCourse } from '@/hooks/useSingleCourse';
-import { AlertCircle } from 'lucide-react';
+import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 
 interface Semester {
     id: string;
@@ -63,7 +63,7 @@ export default function PrereqWarning({ courseId, semester, allSemesters }: Prer
         >
             {missingPrereqs.map(prereqId => (
                 <div key={`prereq-${prereqId}`} className="flex items-start p-2 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-800">
-                    <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 mr-2 flex-shrink-0" />
+                    <ExclamationCircleIcon className="w-5 h-5 text-amber-500 mr-1.5 flex-shrink-0" />
                     <span>
                         Missing prerequisite: <span className="font-semibold">{prereqId}</span> (not found in earlier semesters)
                     </span>
@@ -72,7 +72,7 @@ export default function PrereqWarning({ courseId, semester, allSemesters }: Prer
 
             {missingCoreqs.map(coreqId => (
                 <div key={`coreq-${coreqId}`} className="flex items-start p-2 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-800">
-                    <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 mr-2 flex-shrink-0" />
+                    <ExclamationCircleIcon className="w-5 h-5 text-amber-500 mr-1.5 flex-shrink-0" />
                     <span>
                         Missing co-requisite: <span className="font-semibold">{coreqId}</span> (not found in this semester)
                     </span>
