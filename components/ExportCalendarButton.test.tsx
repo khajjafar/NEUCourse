@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import ExportCalendarButton from './ExportCalendarButton';
+import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
+import ExportCalendarButton from '@/components/ExportCalendarButton';
 import { CalendarEvent } from '@/hooks/useCalendarEvents';
 import * as icsExport from '@/lib/ics-export';
 
@@ -53,7 +53,7 @@ describe('ExportCalendarButton', () => {
     });
 
     it('calls generate and download on confirm with filled forms', async () => {
-        (icsExport.generateICSFile as jest.Mock).mockReturnValue('BEGIN:VCALENDAR...END:VCALENDAR');
+        (icsExport.generateICSFile as Mock).mockReturnValue('BEGIN:VCALENDAR...END:VCALENDAR');
 
         render(<ExportCalendarButton events={mockEvents} />);
 
@@ -72,7 +72,7 @@ describe('ExportCalendarButton', () => {
             expect(icsExport.downloadICSFile).toHaveBeenCalledTimes(1);
         });
 
-        const generateArgs = (icsExport.generateICSFile as jest.Mock).mock.calls[0];
+        const generateArgs = (icsExport.generateICSFile as Mock).mock.calls[0];
         expect(generateArgs[0]).toEqual(mockEvents);
         // Default start date logic tested effectively here (just checking type)
         expect(generateArgs[1]).toBeInstanceOf(Date);
@@ -85,7 +85,7 @@ describe('ExportCalendarButton', () => {
     });
 
     it('does not download if generateICSFile returns null', async () => {
-        (icsExport.generateICSFile as jest.Mock).mockReturnValue(null);
+        (icsExport.generateICSFile as Mock).mockReturnValue(null);
         // Mock window.alert to prevent jsdom not implemented error
         const alertMock = vi.spyOn(window, 'alert').mockImplementation(() => { });
 

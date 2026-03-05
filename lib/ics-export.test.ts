@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { generateICSFile } from './ics-export';
+import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
+import { generateICSFile } from '@/lib/ics-export';
 import * as ics from 'ics';
 import { CalendarEvent } from '@/hooks/useCalendarEvents';
 
@@ -41,14 +41,14 @@ describe('ics-export utility', () => {
     });
 
     it('generates single event on one day correctly', () => {
-        (ics.createEvents as jest.Mock).mockReturnValue({ value: 'BEGIN:VCALENDAR\\n...' });
+        (ics.createEvents as Mock).mockReturnValue({ value: 'BEGIN:VCALENDAR\\n...' });
 
         const result = generateICSFile([mockEvents[0]], semesterStart, 1);
 
         expect(result).not.toBeNull();
         expect(ics.createEvents).toHaveBeenCalledTimes(1);
 
-        const callArgs = (ics.createEvents as jest.Mock).mock.calls[0][0];
+        const callArgs = (ics.createEvents as Mock).mock.calls[0][0];
         expect(callArgs).toHaveLength(1);
 
         const event = callArgs[0];
@@ -61,13 +61,13 @@ describe('ics-export utility', () => {
     });
 
     it('MWF event produces 3 events per week', () => {
-        (ics.createEvents as jest.Mock).mockReturnValue({ value: 'BEGIN:VCALENDAR\\n...' });
+        (ics.createEvents as Mock).mockReturnValue({ value: 'BEGIN:VCALENDAR\\n...' });
 
         // 2 weeks of MWF = 6 events
         generateICSFile([mockEvents[1]], semesterStart, 2);
 
         expect(ics.createEvents).toHaveBeenCalledTimes(1);
-        const callArgs = (ics.createEvents as jest.Mock).mock.calls[0][0];
+        const callArgs = (ics.createEvents as Mock).mock.calls[0][0];
         expect(callArgs).toHaveLength(6);
 
         // Check days mapping implicitly through the dates generated
@@ -89,23 +89,23 @@ describe('ics-export utility', () => {
     });
 
     it('handles events with no location', () => {
-        (ics.createEvents as jest.Mock).mockReturnValue({ value: 'BEGIN:VCALENDAR\\n...' });
+        (ics.createEvents as Mock).mockReturnValue({ value: 'BEGIN:VCALENDAR\\n...' });
 
         generateICSFile([mockEvents[1]], semesterStart, 1);
 
-        const callArgs = (ics.createEvents as jest.Mock).mock.calls[0][0];
+        const callArgs = (ics.createEvents as Mock).mock.calls[0][0];
         expect(callArgs[0].location).toBeUndefined();
     });
 
     it('returns null on createEvents error', () => {
-        (ics.createEvents as jest.Mock).mockReturnValue({ error: new Error('Mock error') });
+        (ics.createEvents as Mock).mockReturnValue({ error: new Error('Mock error') });
 
         const result = generateICSFile([mockEvents[0]], semesterStart, 1);
         expect(result).toBeNull();
     });
 
     it('parses 24h time correctly (13:30 -> hour 13, minute 30)', () => {
-        (ics.createEvents as jest.Mock).mockReturnValue({ value: 'BEGIN:VCALENDAR\\n...' });
+        (ics.createEvents as Mock).mockReturnValue({ value: 'BEGIN:VCALENDAR\\n...' });
 
         const pmEvent: CalendarEvent = {
             id: 'x',
@@ -116,14 +116,14 @@ describe('ics-export utility', () => {
         };
 
         generateICSFile([pmEvent], semesterStart, 1);
-        const callArgs = (ics.createEvents as jest.Mock).mock.calls[0][0];
+        const callArgs = (ics.createEvents as Mock).mock.calls[0][0];
 
         expect(callArgs[0].start.slice(3)).toEqual([13, 30]); // [hour, min]
         expect(callArgs[0].end.slice(3)).toEqual([15, 45]);
     });
 
     it('ignores events with invalid days or skips invalid mapping', () => {
-        (ics.createEvents as jest.Mock).mockReturnValue({ value: 'BEGIN:VCALENDAR\\n...' });
+        (ics.createEvents as Mock).mockReturnValue({ value: 'BEGIN:VCALENDAR\\n...' });
 
         const weirdEvent: CalendarEvent = {
             id: 'z',
@@ -139,7 +139,7 @@ describe('ics-export utility', () => {
     });
 
     it('handles invalid time structures gracefully', () => {
-        (ics.createEvents as jest.Mock).mockReturnValue({ value: 'BEGIN:VCALENDAR\\n...' });
+        (ics.createEvents as Mock).mockReturnValue({ value: 'BEGIN:VCALENDAR\\n...' });
 
         const result = generateICSFile([mockEvents[2]], semesterStart, 1); // Mock 2 has invalid startTime
         expect(result).toBeNull();
