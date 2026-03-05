@@ -4,7 +4,7 @@ import React, { useState, FormEvent, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePlanDetails } from '@/hooks/usePlanDetails';
 import { useRouter, useParams } from 'next/navigation';
-import CourseMiniCard from '@/components/CourseMiniCard';
+import PlanCourseItem from '@/components/PlanCourseItem';
 import PrereqWarning from '@/components/PrereqWarning';
 import Link from 'next/link';
 
@@ -127,7 +127,7 @@ export default function PlanDetailsPage() {
                                         <div className="space-y-3">
                                             {semester.courses.map((courseId) => (
                                                 <div key={courseId} className="flex flex-col">
-                                                    <CourseMiniCard
+                                                    <PlanCourseItem
                                                         courseId={courseId}
                                                         onRemove={() => {
                                                             removeCourseFromSemester(semester.id, courseId)
