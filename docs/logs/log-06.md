@@ -1,0 +1,13 @@
+# Log 06
+- ID: log-06
+- Timestamp: 2026-03-04T21:33:00-08:00
+- Description: Fixed calendar page bugs and completed event CRUD for Weekly Calendar view.
+  - Fixed dark background issue in global CSS.
+  - Rewrote calendar component to support full 24-hour vertical timeline.
+  - Replaced date-of-week logic with absolute local Dates to fix timezone overflow issues.
+  - Implemented visual overlap detection for colliding events.
+  - Added new event form inputs: Location and Date.
+  - Hooked up `updateEvent` PUT API request.
+  - Fixed typing issues across all `hooks/useEvents.ts` and API routes to strictly use `unknown`.
+  - Added guard to filter corrupted empty events returned from DB.
+- Issue: #6

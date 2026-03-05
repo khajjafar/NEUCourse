@@ -1,10 +1,26 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { verifyAuth, successResponse, errorResponse } from '@/lib/api-helpers';
+import { FieldValue } from 'firebase-admin/firestore';
 
 /**
- * DELETE /api/v1/events/[eventId]
- * Delete a specific event
+ * @swagger
+ * /api/v1/events/{eventId}:
+ *   delete:
+ *     summary: Delete a specific event
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Event deleted successfully
+ *       404:
+ *         description: Event not found
  */
 export async function DELETE(
     request: Request,
@@ -13,7 +29,7 @@ export async function DELETE(
     try {
         const authResult = await verifyAuth(request);
         if (authResult.error || !authResult.user) {
-            return NextResponse.json(errorResponse('UNAUTHORIZED', 'Missing or invalid authorization token'), { status: 401 });
+            return errorResponse('Missing or invalid authorization token', 'UNAUTHORIZED', 401);
         }
 
         const { eventId } = await params;
@@ -26,14 +42,81 @@ export async function DELETE(
 
         const eventDoc = await eventRef.get();
         if (!eventDoc.exists) {
-            return NextResponse.json(errorResponse('NOT_FOUND', 'Event not found'), { status: 404 });
+            return errorResponse('Event not found', 'NOT_FOUND', 404);
         }
 
         await eventRef.delete();
 
-        return NextResponse.json(successResponse({ success: true }));
-    } catch (error) {
+        return successResponse({ success: true });
+    } catch (error: unknown) {
         console.error('Error deleting event:', error);
-        return NextResponse.json(errorResponse('INTERNAL_SERVER_ERROR', 'Failed to delete event'), { status: 500 });
+        return errorResponse('Failed to delete event', 'INTERNAL_SERVER_ERROR', 500);
+    }
+}
+
+/**
+ * @swagger
+ * /api/v1/events/{eventId}:
+ *   put:
+ *     summary: Update a specific event
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: eventId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Event updated successfully
+ *       400:
+ *         description: Missing required fields
+ *       404:
+ *         description: Event not found
+ */
+export async function PUT(
+    request: Request,
+    { params }: { params: Promise<{ eventId: string }> }
+) {
+    try {
+        const authResult = await verifyAuth(request);
+        if (authResult.error || !authResult.user) {
+            return errorResponse('Missing or invalid authorization token', 'UNAUTHORIZED', 401);
+        }
+
+        const { eventId } = await params;
+        const body = await request.json();
+
+        if (!body.title || !body.startTime || !body.endTime) {
+            return errorResponse('Missing required fields: title, startTime, endTime', 'BAD_REQUEST', 400);
+        }
+
+        const eventRef = adminDb
+            .collection('users')
+            .doc(authResult.user.uid)
+            .collection('events')
+            .doc(eventId);
+
+        const eventDoc = await eventRef.get();
+        if (!eventDoc.exists) {
+            return errorResponse('Event not found', 'NOT_FOUND', 404);
+        }
+
+        const updateData = {
+            title: body.title,
+            startTime: body.startTime,
+            endTime: body.endTime,
+            location: body.location || '',
+            color: body.color || 'blue',
+            updatedAt: FieldValue.serverTimestamp(),
+        };
+
+        await eventRef.update(updateData);
+
+        return successResponse({ id: eventId, ...updateData });
+    } catch (error: unknown) {
+        console.error('Error updating event:', error);
+        return errorResponse('Failed to update event', 'INTERNAL_SERVER_ERROR', 500);
     }
 }
