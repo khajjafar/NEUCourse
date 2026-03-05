@@ -20,7 +20,7 @@ describe('RegisterPage', () => {
     it('validates password length before submitting', async () => {
         render(<RegisterPage />);
 
-        fireEvent.change(screen.getByLabelText('Email Address'), { target: { value: 'student@neu.edu' } });
+        fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'student@neu.edu' } });
         fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'short' } });
         fireEvent.click(screen.getByRole('button', { name: 'Sign Up' }));
 
@@ -34,7 +34,7 @@ describe('RegisterPage', () => {
         vi.mocked(createUserWithEmailAndPassword).mockRejectedValueOnce({ code: 'auth/email-already-in-use' });
         render(<RegisterPage />);
 
-        fireEvent.change(screen.getByLabelText('Email Address'), { target: { value: 'student@neu.edu' } });
+        fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'student@neu.edu' } });
         fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'validpassword' } });
         fireEvent.click(screen.getByRole('button', { name: 'Sign Up' }));
 
@@ -47,7 +47,7 @@ describe('RegisterPage', () => {
         vi.mocked(createUserWithEmailAndPassword).mockResolvedValueOnce({} as any);
         render(<RegisterPage />);
 
-        fireEvent.change(screen.getByLabelText('Email Address'), { target: { value: 'newstudent@neu.edu' } });
+        fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'newstudent@neu.edu' } });
         fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'strongpassword' } });
         fireEvent.click(screen.getByRole('button', { name: 'Sign Up' }));
 

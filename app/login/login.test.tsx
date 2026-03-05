@@ -20,8 +20,8 @@ describe('LoginPage', () => {
 
     it('renders login form properly', () => {
         render(<LoginPage />);
-        expect(screen.getByText('NEUCourse Login')).toBeInTheDocument();
-        expect(screen.getByLabelText('Email Address')).toBeInTheDocument();
+        expect(screen.getByText('Plan your degree. Own your schedule.')).toBeInTheDocument();
+        expect(screen.getByLabelText('Email')).toBeInTheDocument();
         expect(screen.getByLabelText('Password')).toBeInTheDocument();
     });
 
@@ -29,9 +29,9 @@ describe('LoginPage', () => {
         vi.mocked(signInWithEmailAndPassword).mockResolvedValueOnce({} as any);
         render(<LoginPage />);
 
-        fireEvent.change(screen.getByLabelText('Email Address'), { target: { value: 'student@neu.edu' } });
+        fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'student@neu.edu' } });
         fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password123' } });
-        fireEvent.click(screen.getByRole('button', { name: 'Sign In' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Log In' }));
 
         await waitFor(() => {
             expect(signInWithEmailAndPassword).toHaveBeenCalledWith(expect.anything(), 'student@neu.edu', 'password123');
@@ -42,9 +42,9 @@ describe('LoginPage', () => {
         vi.mocked(signInWithEmailAndPassword).mockRejectedValueOnce(new Error('auth/invalid-credential'));
         render(<LoginPage />);
 
-        fireEvent.change(screen.getByLabelText('Email Address'), { target: { value: 'student@neu.edu' } });
+        fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'student@neu.edu' } });
         fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'wrongpass' } });
-        fireEvent.click(screen.getByRole('button', { name: 'Sign In' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Log In' }));
 
         await waitFor(() => {
             expect(screen.getByText('Invalid email or password. Please try again.')).toBeInTheDocument();

@@ -2,11 +2,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Plan } from './usePlans';
 
+export interface CourseAssignment {
+    courseId: string;
+    crn?: string;
+}
+
 export interface Semester {
     id: string;
     name: string;
     order: number;
-    courses: string[]; // List of course IDs
+    courses: (string | CourseAssignment)[]; // List of course IDs or objects
 }
 
 export interface DetailedPlan extends Plan {
@@ -76,15 +81,19 @@ export function usePlanDetails(planId: string | null) {
         await fetchPlanDetails();
     };
 
-    const addCourseToSemester = async (semId: string, courseId: string) => {
+    const addCourseToSemester = async (semId: string, courseId: string, crn?: string) => {
         if (!user || !planId) throw new Error("Missing authentication or Plan ID.");
 
         // Optimistic UI update
         setPlan(prevPlan => {
             if (!prevPlan) return prevPlan;
             const updatedSemesters = prevPlan.semesters.map(sem => {
-                if (sem.id === semId && !sem.courses.includes(courseId)) {
-                    return { ...sem, courses: [...sem.courses, courseId] };
+                if (sem.id === semId) {
+                    const exists = sem.courses.some(c => typeof c === 'string' ? c === courseId : c.courseId === courseId);
+                    if (!exists) {
+                        const newPayload = crn ? { courseId, crn } : { courseId };
+                        return { ...sem, courses: [...sem.courses, newPayload] };
+                    }
                 }
                 return sem;
             });
@@ -98,7 +107,7 @@ export function usePlanDetails(planId: string | null) {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`
             },
-            body: JSON.stringify({ courseId })
+            body: JSON.stringify({ courseId, crn })
         });
 
         if (!response.ok) {
@@ -117,7 +126,7 @@ export function usePlanDetails(planId: string | null) {
             if (!prevPlan) return prevPlan;
             const updatedSemesters = prevPlan.semesters.map(sem => {
                 if (sem.id === semId) {
-                    return { ...sem, courses: sem.courses.filter(id => id !== courseId) };
+                    return { ...sem, courses: sem.courses.filter(c => typeof c === 'string' ? c !== courseId : c.courseId !== courseId) };
                 }
                 return sem;
             });
@@ -140,11 +149,120 @@ export function usePlanDetails(planId: string | null) {
         }
     };
 
+    const deleteSemester = async (semId: string) => {
+        if (!user || !planId) throw new Error("Missing authentication or Plan ID.");
+
+        let previousSemesters: Semester[] = [];
+
+        setPlan(prevPlan => {
+            if (!prevPlan) return prevPlan;
+            previousSemesters = prevPlan.semesters;
+            const updatedSemesters = prevPlan.semesters.filter(sem => sem.id !== semId);
+            return { ...prevPlan, semesters: updatedSemesters };
+        });
+
+        const token = await user.getIdToken();
+        const response = await fetch(`/api/v1/plans/${planId}/semesters/${semId}`, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            setPlan(prevPlan => prevPlan ? { ...prevPlan, semesters: previousSemesters } : prevPlan);
+            const data = await response.json();
+            throw new Error(data.error?.message || 'Failed to delete semester');
+        }
+    };
+
+    const reorderSemesters = async (semId: string, destinationIndex: number) => {
+        if (!user || !planId || !plan) throw new Error("Missing authentication or Plan ID.");
+
+        const semestersCopy = [...plan.semesters].sort((a, b) => a.order - b.order);
+        const sourceIndex = semestersCopy.findIndex(s => s.id === semId);
+        if (sourceIndex === -1 || sourceIndex === destinationIndex) return;
+
+        const [movedSem] = semestersCopy.splice(sourceIndex, 1);
+        semestersCopy.splice(destinationIndex, 0, movedSem);
+
+        const updatedSemesters = semestersCopy.map((sem, index) => ({ ...sem, order: index + 1 }));
+
+        setPlan(prev => prev ? { ...prev, semesters: updatedSemesters } : prev);
+
+        const token = await user.getIdToken();
+        try {
+            await Promise.all(updatedSemesters.map(sem =>
+                fetch(`/api/v1/plans/${planId}/semesters/${sem.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ order: sem.order })
+                })
+            ));
+        } catch (error) {
+            console.error('Failed to reorder semesters:', error);
+            await fetchPlanDetails();
+        }
+    };
+
+    const moveCourseBetweenSemesters = async (sourceSemId: string, destSemId: string, sourceIndex: number, destinationIndex: number) => {
+        if (!user || !planId || !plan) throw new Error("Missing authentication");
+
+        const token = await user.getIdToken();
+
+        const newSems = [...plan.semesters];
+        const srcIdx = newSems.findIndex(s => s.id === sourceSemId);
+        const dstIdx = newSems.findIndex(s => s.id === destSemId);
+
+        if (srcIdx === -1 || dstIdx === -1) return;
+
+        const srcCourses = [...newSems[srcIdx].courses];
+        const [targetCourse] = srcCourses.splice(sourceIndex, 1);
+        newSems[srcIdx] = { ...newSems[srcIdx], courses: srcCourses };
+
+        const dstCourses = sourceSemId === destSemId ? srcCourses : [...newSems[dstIdx].courses];
+        dstCourses.splice(destinationIndex, 0, targetCourse);
+
+        newSems[dstIdx] = { ...newSems[dstIdx], courses: dstCourses };
+
+        // Optimistic update
+        setPlan({ ...plan, semesters: newSems });
+
+        try {
+            if (sourceSemId === destSemId) {
+                await fetch(`/api/v1/plans/${planId}/semesters/${sourceSemId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ courses: srcCourses })
+                });
+            } else {
+                await Promise.all([
+                    fetch(`/api/v1/plans/${planId}/semesters/${sourceSemId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                        body: JSON.stringify({ courses: srcCourses })
+                    }),
+                    fetch(`/api/v1/plans/${planId}/semesters/${destSemId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                        body: JSON.stringify({ courses: dstCourses })
+                    })
+                ]);
+            }
+        } catch (error) {
+            console.error('Failed to move course:', error);
+            await fetchPlanDetails();
+        }
+    };
+
     return {
         plan,
         loading: loading || authLoading,
         error,
         addSemester,
+        deleteSemester,
+        reorderSemesters,
+        moveCourseBetweenSemesters,
         addCourseToSemester,
         removeCourseFromSemester
     };

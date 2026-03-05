@@ -55,9 +55,25 @@ export async function DELETE(
             .collection('semesters')
             .doc(semId);
 
-        // Update the semester document safely by removing the course string exclusively
+        const semesterDoc = await semesterRef.get();
+        if (!semesterDoc.exists) {
+            return errorResponse('Target Plan or Semester does not exist', 'NOT_FOUND', 404);
+        }
+
+        const currentCourses = semesterDoc.data()?.courses || [];
+
+        // Filter out the specific courseId, resolving both old format strings and new format objects safely
+        const updatedCourses = currentCourses.filter((courseItem: any) => {
+            if (typeof courseItem === 'string') {
+                return courseItem !== courseId.trim();
+            } else if (typeof courseItem === 'object' && courseItem !== null) {
+                return courseItem.courseId !== courseId.trim();
+            }
+            return true;
+        });
+
         await semesterRef.update({
-            courses: FieldValue.arrayRemove(courseId.trim())
+            courses: updatedCourses
         });
 
         return successResponse({ removed: true, courseId: courseId.trim() });

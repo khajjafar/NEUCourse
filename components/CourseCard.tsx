@@ -15,8 +15,8 @@ export default function CourseCard({ course }: CourseCardProps) {
                         <h3 className="text-lg font-bold text-gray-900 leading-tight">
                             {course.subject} {course.number}: {course.name}
                         </h3>
-                        <span className="inline-flex items-center shrink-0 whitespace-nowrap rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-800">
-                            {course.creditHours} Credits
+                        <span className="inline-flex items-center shrink-0 whitespace-nowrap rounded-md bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                            {course.creditHours} cr
                         </span>
                     </div>
 
@@ -28,10 +28,10 @@ export default function CourseCard({ course }: CourseCardProps) {
                         <div className="mt-4 pt-4 border-t border-gray-100">
                             {course.prereqs.length > 0 && (
                                 <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Prereqs:</span>
+                                    <span className="text-sm font-medium text-orange-500">Prereqs:</span>
                                     <div className="flex flex-wrap gap-1">
                                         {course.prereqs.map((pr) => (
-                                            <span key={pr} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                                            <span key={pr} className="text-sm text-orange-500">
                                                 {pr}
                                             </span>
                                         ))}
@@ -40,10 +40,10 @@ export default function CourseCard({ course }: CourseCardProps) {
                             )}
                             {course.coreqs.length > 0 && (
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Coreqs:</span>
+                                    <span className="text-sm font-medium text-blue-500">Coreqs:</span>
                                     <div className="flex flex-wrap gap-1">
                                         {course.coreqs.map((cr) => (
-                                            <span key={cr} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                                            <span key={cr} className="text-sm text-blue-500">
                                                 {cr}
                                             </span>
                                         ))}

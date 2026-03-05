@@ -4,32 +4,92 @@ import React from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { AuthGuard } from "@/components/AuthGuard";
 
+import { usePlans } from "@/hooks/usePlans";
+import { useEvents } from "@/hooks/useEvents";
+import Link from "next/link";
+
 export default function DashboardPage() {
     const { user, logout } = useAuth();
+    const { plans, loading: plansLoading } = usePlans();
+    const { events, loading: eventsLoading } = useEvents();
+
+    const upcomingEvents = events.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()).slice(0, 5);
 
     return (
         <AuthGuard>
-            <div className="min-h-screen bg-gray-50">
-                <header className="bg-white shadow">
-                    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-                        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-                        <div className="flex items-center space-x-4">
-                            <span className="text-sm text-gray-500">{user?.email}</span>
-                            <button
-                                onClick={logout}
-                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                            >
-                                Log Out
-                            </button>
-                        </div>
-                    </div>
-                </header>
+            <div className="min-h-screen bg-gray-50 pb-12">
                 <main>
-                    <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-                        <div className="px-4 py-6 sm:px-0">
-                            <div className="border-4 border-dashed border-gray-200 rounded-lg h-96 flex flex-col items-center justify-center text-gray-500">
-                                <p>Welcome to NEUCourse!</p>
-                                <p className="text-sm mt-2">Your plans and calendar will appear here.</p>
+                    <div className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
+                        <div className="px-4 sm:px-0 mb-8">
+                            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                                Welcome back, Husky
+                                <img src="/paw-print.svg" alt="Paw Print" className="w-8 h-8 opacity-80" />
+                            </h1>
+                            <p className="text-gray-500 mt-2">{user?.email}</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 sm:px-0">
+                            <div className="lg:col-span-2 space-y-6">
+                                <section className="bg-white shadow rounded-xl p-6 border border-gray-200">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h2 className="text-xl font-bold text-gray-900">My Degree Plans</h2>
+                                        <Link href="/plans" className="text-sm font-medium text-indigo-600 hover:text-indigo-800">View All</Link>
+                                    </div>
+
+                                    {plansLoading ? (
+                                        <div className="animate-pulse space-y-4">
+                                            {[1, 2].map(i => <div key={i} className="h-16 bg-gray-100 rounded-lg"></div>)}
+                                        </div>
+                                    ) : plans.length === 0 ? (
+                                        <div className="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                                            <p className="text-gray-500">No active plans.</p>
+                                            <Link href="/plans" className="mt-2 inline-block text-indigo-600 font-medium">Create your first plan &rarr;</Link>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {plans.map(plan => (
+                                                <Link key={plan.id} href={`/plans/${plan.id}`} className="block border border-gray-200 rounded-lg p-4 hover:border-indigo-300 hover:bg-indigo-50 transition-colors">
+                                                    <div className="flex justify-between items-center">
+                                                        <h3 className="font-semibold text-gray-900">{plan.name}</h3>
+                                                        <span className="text-sm text-gray-500">{plan.semesters?.length || 0} Semesters</span>
+                                                    </div>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    )}
+                                </section>
+                            </div>
+
+                            <div className="lg:col-span-1">
+                                <section className="bg-white shadow rounded-xl p-6 border border-gray-200 sticky top-24">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h2 className="text-xl font-bold text-gray-900">Upcoming Events</h2>
+                                        <Link href="/calendar" className="text-sm font-medium text-indigo-600 hover:text-indigo-800">Calendar</Link>
+                                    </div>
+
+                                    {eventsLoading ? (
+                                        <div className="animate-pulse space-y-4">
+                                            {[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-100 rounded-lg"></div>)}
+                                        </div>
+                                    ) : upcomingEvents.length === 0 ? (
+                                        <div className="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                                            <p className="text-gray-500 text-sm">No scheduled events.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {upcomingEvents.map(event => (
+                                                <div key={event.id} className="flex gap-4 items-start border-l-2 pl-3" style={{ borderLeftColor: event.color === 'blue' ? '#3b82f6' : event.color === 'red' ? '#ef4444' : '#22c55e' }}>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-semibold text-gray-900 truncate">{event.title}</p>
+                                                        <p className="text-xs text-gray-500">
+                                                            {new Date(event.startTime).toLocaleDateString([], { weekday: 'short' })} • {new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </section>
                             </div>
                         </div>
                     </div>

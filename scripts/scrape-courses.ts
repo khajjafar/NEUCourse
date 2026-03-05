@@ -2,7 +2,7 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as dotenv from 'dotenv';
 import path from 'path';
-import * as cheerio from 'cheerio';
+import { chromium } from 'playwright';
 
 // Load .env.local for Firebase Admin credentials
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
@@ -131,7 +131,7 @@ const fallbackCourses: Course[] = [
     }
 ];
 
-async function scrapeSearchNeu(): Promise<Course[]> {
+async function scrapeSearchNeu(limit: number = 0): Promise<Course[]> {
     console.log('Fetching course data from SearchNEU API...');
 
     try {
@@ -154,7 +154,7 @@ async function scrapeSearchNeu(): Promise<Course[]> {
                 subject: item.subject,
                 number: item.courseNumber,
                 name: item.name.trim(),
-                description: "Northeastern University course.",
+                description: "", // Will populate with Playwright later
                 creditHours: parseInt(item.maxCredits, 10) || parseInt(item.minCredits, 10) || 4,
                 prereqs: [],
                 coreqs: [],
@@ -197,48 +197,102 @@ async function scrapeSearchNeu(): Promise<Course[]> {
             }
         }
 
+        if (limit > 0) {
+            console.log(`Applying testing limit: Reducing from ${courses.length} courses to ${limit}.`);
+            courses.length = limit;
+        }
+
         console.log(`Successfully fetched ${courses.length} courses from SearchNEU API. Now fetching sections...`);
 
-        // Batch fetch sections for all courses using Cheerio to scrape the HTML table
-        const BATCH_SIZE = 25;
+        // Batch fetch sections and descriptions for all courses using Playwright
+        const BATCH_SIZE = 10; // Reduced batch size for headful Playwright processes
+
+        const browser = await chromium.launch({ headless: true });
+
         for (let i = 0; i < courses.length; i += BATCH_SIZE) {
             const batch = courses.slice(i, i + BATCH_SIZE);
-            console.log(`Fetching HTML section data for courses ${i + 1} to ${Math.min(i + BATCH_SIZE, courses.length)} of ${courses.length}...`);
+            console.log(`Fetching detailed data for courses ${i + 1} to ${Math.min(i + BATCH_SIZE, courses.length)} of ${courses.length}...`);
 
             await Promise.all(batch.map(async (course) => {
+                const context = await browser.newContext({
+                    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                });
+                const page = await context.newPage();
+
                 try {
                     const url = `https://searchneu.com/catalog/202630/${encodeURIComponent(course.subject + ' ' + course.number)}`;
-                    const res = await fetch(url);
-                    if (!res.ok) return;
+                    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-                    const html = await res.text();
-                    const $ = cheerio.load(html);
+                    // 1. Extract Description
+                    console.log(`Starting extraction for ${course.subject} ${course.number}`);
+                    try {
+                        const header = page.locator('h3:has-text("COURSE DESCRIPTION")');
+                        await header.waitFor({ timeout: 10000 });
+                        console.log(`[${course.number}] Found Header.`);
 
-                    const classSections: ClassSection[] = [];
-                    $('table tbody tr').each((_, row) => {
-                        const tds = $(row).find('td');
-                        if (tds.length >= 7) {
-                            const crn = $(tds[1]).text().trim();
-                            const seatsMatch = $(tds[2]).text().match(/(\d+)\s*\/\s*(\d+)/);
-                            const seats = seatsMatch ? `${seatsMatch[1]} / ${seatsMatch[2]}` : $(tds[2]).text().trim();
-                            const timeText = $(tds[3]).text().trim().replace(/\s+/g, ' ');
-                            const rooms = $(tds[4]).text().trim();
-                            const professor = $(tds[5]).text().trim();
-                            const campus = $(tds[6]).text().trim();
+                        const parentDiv = header.locator('..');
+                        const descParagraph = parentDiv.locator('p');
+                        await descParagraph.waitFor({ state: 'attached', timeout: 5000 });
 
-                            classSections.push({ crn, seats, meetingTimes: timeText, rooms, professor, campus });
+                        const seeMoreBtn = descParagraph.locator('button', { hasText: /see more/i });
+                        if (await seeMoreBtn.count() > 0 && await seeMoreBtn.isVisible()) {
+                            console.log(`[${course.number}] Clicking see more...`);
+                            await seeMoreBtn.click({ timeout: 2000 }).catch(() => { });
                         }
-                    });
 
-                    // Assign the sections to the course
-                    course.sections = classSections;
+                        const fullText = await descParagraph.innerText();
+                        console.log(`[${course.number}] Extracted length: ${fullText.length}`);
+                        course.description = fullText.replace(/see more/i, '').replace(/see less/i, '').trim();
+                        console.log(`[${course.number}] Set course.description to: ${course.description.substring(0, 30)}...`);
+                    } catch (descError) {
+                        console.error(`Error scraping description for ${course.subject} ${course.number}:`, (descError as Error).message);
+                        course.description = "Northeastern University course."; // fallback
+                    }
+
+                    // 2. Extract Sections
+                    const classSections: ClassSection[] = [];
+                    try {
+                        const rows = page.locator('table tbody tr');
+                        const rowCount = await rows.count();
+
+                        for (let j = 0; j < rowCount; j++) {
+                            const row = rows.nth(j);
+                            const tds = row.locator('td');
+
+                            if (await tds.count() >= 7) {
+                                const crn = (await tds.nth(1).innerText()).trim();
+
+                                const rawSeats = await tds.nth(2).innerText();
+                                const seatsMatch = rawSeats.match(/(\d+)\s*\/\s*(\d+)/);
+                                const seats = seatsMatch ? `${seatsMatch[1]} / ${seatsMatch[2]}` : rawSeats.trim();
+
+                                const rawTime = await tds.nth(3).innerText();
+                                const timeText = rawTime.trim().replace(/\s+/g, ' ');
+
+                                const rooms = (await tds.nth(4).innerText()).trim();
+                                const professor = (await tds.nth(5).innerText()).trim();
+                                const campus = (await tds.nth(6).innerText()).trim();
+
+                                classSections.push({ crn, seats, meetingTimes: timeText, rooms, professor, campus });
+                            }
+                        }
+                        course.sections = classSections;
+                    } catch (sectionError) {
+                        // ignore scraping section failures
+                    }
+
                 } catch (e) {
+                    console.error(`Outer error for ${course.subject} ${course.number}:`, e);
                     // Ignore individual fetch errors so the rest keep processing
+                    course.description = "Northeastern University course."; // fallback if blocked
+                } finally {
+                    await context.close();
                 }
             }));
         }
 
-        console.log(`Successfully scraped sections for all courses.`);
+        await browser.close();
+        console.log(`Successfully scraped sections and descriptions for all courses.`);
         return courses.length > 0 ? courses : fallbackCourses;
 
     } catch (error: any) {
@@ -281,7 +335,17 @@ async function uploadCoursesToFirestore(courses: Course[]) {
 
 async function run() {
     console.log('--- Starting Course Scraper ---');
-    const courses = await scrapeSearchNeu();
+
+    // Parse CLI arguments
+    const args = process.argv.slice(2);
+    const limitArg = args.findIndex(a => a === '--limit');
+    let limit = 0;
+    if (limitArg !== -1 && args[limitArg + 1]) {
+        limit = parseInt(args[limitArg + 1], 10);
+    }
+
+    let courses = await scrapeSearchNeu(limit);
+
     await uploadCoursesToFirestore(courses);
     console.log('--- Finished Course Scraper ---');
     process.exit(0);

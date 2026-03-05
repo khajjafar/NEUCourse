@@ -27,56 +27,69 @@ export default function LoginPage() {
 
     return (
         <main className="flex min-h-screen items-center justify-center bg-gray-50 p-6">
-            <div className="w-full max-w-md bg-white rounded-lg shadow-md p-8">
-                <h1 className="text-2xl font-bold text-center text-red-600 mb-6">NEUCourse Login</h1>
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 sm:p-10 space-y-8">
+                <div className="text-center space-y-2">
+                    <h1 className="text-4xl font-extrabold tracking-tight">
+                        <span className="text-red-600">NEU</span><span className="text-gray-900">Course</span>
+                    </h1>
+                    <p className="text-gray-400 text-sm font-medium">Plan your degree. Own your schedule.</p>
+                </div>
+
+                <div className="flex border-b border-gray-100">
+                    <div className="flex-1 pb-3 text-gray-900 font-semibold border-b-4 border-red-600 text-center">
+                        Log In
+                    </div>
+                    <Link href="/register" className="flex-1 pb-3 text-gray-400 font-medium hover:text-gray-600 transition-colors text-center">
+                        Register
+                    </Link>
+                </div>
 
                 {error && (
-                    <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4 text-sm">
+                    <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleLogin} className="space-y-4">
+                <form onSubmit={handleLogin} className="space-y-6">
                     <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
+                        <label htmlFor="email" className="block text-gray-700 text-sm font-semibold mb-2">Email</label>
                         <input
                             id="email"
                             type="email"
+                            placeholder="husky@northeastern.edu"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                            className="w-full px-4 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-600/20 focus:border-red-600 outline-none transition-all"
                             required
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+                        <label htmlFor="password" className="block text-gray-700 text-sm font-semibold mb-2">Password</label>
                         <input
                             id="password"
                             type="password"
+                            placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                            className="w-full px-4 py-4 rounded-xl border border-gray-200 focus:ring-2 focus:ring-red-600/20 focus:border-red-600 outline-none transition-all"
                             required
                         />
                     </div>
 
                     <button
                         type="submit"
-                        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        className="w-full bg-red-600 text-white font-bold text-lg py-4 rounded-xl hover:bg-red-700 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600"
                     >
-                        Sign In
+                        Log In
                     </button>
-                </form>
 
-                <div className="mt-6 text-center">
-                    <p className="text-sm text-gray-600">
-                        Don't have an account?{" "}
-                        <Link href="/register" className="font-medium text-red-600 hover:text-red-500">
-                            Sign up
+                    <div className="text-center pt-2">
+                        <Link href="/courses" className="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">
+                            View courses as a guest
                         </Link>
-                    </p>
-                </div>
+                    </div>
+                </form>
             </div>
         </main>
     );

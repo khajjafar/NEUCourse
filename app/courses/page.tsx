@@ -21,27 +21,13 @@ export default function CoursesPage() {
     const {
         query, setQuery,
         subject, setSubject,
-        level, setLevel,
+        minLevel, setMinLevel,
+        maxLevel, setMaxLevel,
         courses, loading, error
     } = useCourseSearch();
 
     return (
         <main className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <Link href="/" className="text-gray-500 hover:text-red-600 transition-colors">
-                            <ArrowLeftIcon className="w-5 h-5" />
-                        </Link>
-                        <h1 className="text-xl font-bold text-gray-900 tracking-tight">Browse Courses</h1>
-                    </div>
-                    <Link href="/login" className="text-sm font-medium text-red-600 hover:text-red-700">
-                        Sign In
-                    </Link>
-                </div>
-            </header>
-
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Search Bar & Filters */}
                 <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-8 flex flex-col sm:flex-row gap-4">
@@ -51,7 +37,7 @@ export default function CoursesPage() {
                             id="search"
                             type="text"
                             placeholder="Search by name, course number (e.g. CS 3500)..."
-                            className="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 hover:bg-white focus:bg-white transition-colors focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                            className="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 hover:bg-white focus:bg-white transition-colors focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                         />
@@ -60,7 +46,7 @@ export default function CoursesPage() {
                         <label htmlFor="subject" className="sr-only">Filter by Subject</label>
                         <select
                             id="subject"
-                            className="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 hover:bg-white focus:bg-white transition-colors focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                            className="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 hover:bg-white focus:bg-white transition-colors focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none"
                             value={subject}
                             onChange={(e) => setSubject(e.target.value === "ALL" ? "" : e.target.value)}
                         >
@@ -70,20 +56,37 @@ export default function CoursesPage() {
                         </select>
                     </div>
                     <div className="sm:w-48">
-                        <label htmlFor="level" className="sr-only">Filter by Level</label>
+                        <label htmlFor="minLevel" className="sr-only">Min Level</label>
                         <select
-                            id="level"
-                            className="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 hover:bg-white focus:bg-white transition-colors focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
-                            value={level}
-                            onChange={(e) => setLevel(e.target.value === "ALL" ? "" : e.target.value)}
+                            id="minLevel"
+                            className="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 hover:bg-white focus:bg-white transition-colors focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none"
+                            value={minLevel}
+                            onChange={(e) => setMinLevel(e.target.value === "ALL" ? "" : e.target.value)}
                         >
-                            <option value="ALL">All Levels</option>
-                            <option value="1000">1000-Level</option>
-                            <option value="2000">2000-Level</option>
-                            <option value="3000">3000-Level</option>
-                            <option value="4000">4000-Level</option>
-                            <option value="5000">5000-Level</option>
-                            <option value="6000">6000-Level</option>
+                            <option value="ALL">Min Level</option>
+                            <option value="1000">1000</option>
+                            <option value="2000">2000</option>
+                            <option value="3000">3000</option>
+                            <option value="4000">4000</option>
+                            <option value="5000">5000</option>
+                            <option value="6000">6000</option>
+                        </select>
+                    </div>
+                    <div className="sm:w-48">
+                        <label htmlFor="maxLevel" className="sr-only">Max Level</label>
+                        <select
+                            id="maxLevel"
+                            className="w-full rounded-lg border-gray-300 border px-4 py-2.5 bg-gray-50 hover:bg-white focus:bg-white transition-colors focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none"
+                            value={maxLevel}
+                            onChange={(e) => setMaxLevel(e.target.value === "ALL" ? "" : e.target.value)}
+                        >
+                            <option value="ALL">Max Level</option>
+                            <option value="1999">1999</option>
+                            <option value="2999">2999</option>
+                            <option value="3999">3999</option>
+                            <option value="4999">4999</option>
+                            <option value="5999">5999</option>
+                            <option value="6999">6999</option>
                         </select>
                     </div>
                 </div>
