@@ -4,8 +4,8 @@ import { useAuth } from '@/hooks/useAuth';
 export interface Plan {
     id: string;
     name: string;
-    createdAt?: any;
-    semesters?: any[];
+    createdAt?: { seconds: number; nanoseconds: number } | string;
+    semesterCount?: number;
 }
 
 export function usePlans() {
@@ -28,7 +28,8 @@ export function usePlans() {
             const response = await fetch('/api/v1/plans', {
                 headers: {
                     Authorization: `Bearer ${token}`
-                }
+                },
+                cache: 'no-store'
             });
 
             if (!response.ok) {
@@ -38,8 +39,8 @@ export function usePlans() {
 
             const data = await response.json();
             setPlans(data.data || []);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
         } finally {
             setLoading(false);
         }

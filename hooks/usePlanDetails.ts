@@ -38,7 +38,8 @@ export function usePlanDetails(planId: string | null) {
             const response = await fetch(`/api/v1/plans/${planId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
-                }
+                },
+                cache: 'no-store'
             });
 
             if (!response.ok) {
@@ -48,8 +49,8 @@ export function usePlanDetails(planId: string | null) {
 
             const data = await response.json();
             setPlan(data.data as DetailedPlan);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
         } finally {
             setLoading(false);
         }
@@ -116,6 +117,8 @@ export function usePlanDetails(planId: string | null) {
             const data = await response.json();
             throw new Error(data.error?.message || 'Failed to add course');
         }
+
+        await fetchPlanDetails();
     };
 
     const removeCourseFromSemester = async (semId: string, courseId: string) => {

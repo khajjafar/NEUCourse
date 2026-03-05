@@ -10,9 +10,11 @@ interface QuickAddModalProps {
     planId: string | null;
     isOpen: boolean;
     onClose: () => void;
+    addCourseToSemester: (semId: string, courseId: string, crn?: string) => Promise<void>;
+    semesters: Array<{ id: string; name: string; order: number; courses: (string | { courseId: string; crn?: string })[] }>;
 }
 
-export default function QuickAddModal({ planId, isOpen, onClose }: QuickAddModalProps) {
+export default function QuickAddModal({ planId, isOpen, onClose, addCourseToSemester, semesters }: QuickAddModalProps) {
     const { query, setQuery, courses, loading: searchLoading, error: searchError } = useCourseSearch();
     const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
 
@@ -85,6 +87,8 @@ export default function QuickAddModal({ planId, isOpen, onClose }: QuickAddModal
                                     isExpanded={selectedCourseId === course.id}
                                     onToggle={() => setSelectedCourseId(selectedCourseId === course.id ? null : course.id)}
                                     planId={planId}
+                                    addCourseToSemester={addCourseToSemester}
+                                    semesters={semesters}
                                 />
                             ))}
                         </div>
@@ -95,7 +99,7 @@ export default function QuickAddModal({ planId, isOpen, onClose }: QuickAddModal
     );
 }
 
-function CourseResultRow({ course, isExpanded, onToggle, planId }: { course: CourseData; isExpanded: boolean; onToggle: () => void; planId: string | null; }) {
+function CourseResultRow({ course, isExpanded, onToggle, planId, addCourseToSemester, semesters }: { course: CourseData; isExpanded: boolean; onToggle: () => void; planId: string | null; addCourseToSemester: (semId: string, courseId: string, crn?: string) => Promise<void>; semesters: Array<{ id: string; name: string; order: number; courses: (string | { courseId: string; crn?: string })[] }>; }) {
     return (
         <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
             <button
@@ -115,16 +119,15 @@ function CourseResultRow({ course, isExpanded, onToggle, planId }: { course: Cou
 
             {isExpanded && (
                 <div className="border-t border-gray-100 bg-gray-50 p-4 animate-in slide-in-from-top-2 duration-300 ease-in-out">
-                    <CourseDetailsSection courseId={course.id} planId={planId} />
+                    <CourseDetailsSection courseId={course.id} addCourseToSemester={addCourseToSemester} semesters={semesters} />
                 </div>
             )}
         </div>
     );
 }
 
-function CourseDetailsSection({ courseId, planId }: { courseId: string; planId: string | null; }) {
+function CourseDetailsSection({ courseId, addCourseToSemester, semesters }: { courseId: string; addCourseToSemester: (semId: string, courseId: string, crn?: string) => Promise<void>; semesters: Array<{ id: string; name: string; order: number; courses: (string | { courseId: string; crn?: string })[] }>; }) {
     const { course, loading, error } = useSingleCourse(courseId);
-    const { plan, addCourseToSemester } = usePlanDetails(planId);
 
     // local state for inline semester selection
     const [selectedCrn, setSelectedCrn] = useState<string | null>(null);
@@ -150,8 +153,6 @@ function CourseDetailsSection({ courseId, planId }: { courseId: string; planId: 
     if (loading) return <div className="text-gray-500 text-sm py-4 flex items-center justify-center gap-2"><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div> Loading sections...</div>;
     if (error || !course) return <div className="text-red-500 text-sm py-2 px-3 bg-red-50 rounded border border-red-100">Failed to load course details.</div>;
     if (!course.sections || course.sections.length === 0) return <div className="text-gray-500 text-sm py-3 italic bg-white rounded border border-gray-200 px-4 text-center">No sections available for {courseId}.</div>;
-
-    const semesters = plan?.semesters || [];
 
     return (
         <div className="flex flex-col gap-3">
@@ -214,8 +215,8 @@ function CourseDetailsSection({ courseId, planId }: { courseId: string; planId: 
                                     onClick={() => setSelectedCrn(sec.crn)}
                                     disabled={isAdded}
                                     className={`shrink-0 px-4 py-2 text-sm font-medium rounded-md border transition-colors ${isAdded
-                                            ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
-                                            : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200'
+                                        ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                                        : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200'
                                         }`}
                                 >
                                     {isAdded ? 'Added' : 'Add to Plan'}

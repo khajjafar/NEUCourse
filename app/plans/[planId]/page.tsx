@@ -78,7 +78,9 @@ export default function PlanDetailsPage() {
         deleteSemester,
         reorderSemesters,
         moveCourseBetweenSemesters,
-        removeCourseFromSemester
+        removeCourseFromSemester,
+        addSemester,
+        addCourseToSemester
     } = usePlanDetails(planId);
 
     const router = useRouter();
@@ -320,12 +322,16 @@ export default function PlanDetailsPage() {
                     planId={planId}
                     isOpen={isAddSemesterOpen}
                     onClose={() => setIsAddSemesterOpen(false)}
+                    addSemester={addSemester}
+                    currentSemesterCount={plan.semesters?.length || 0}
                 />
 
                 <QuickAddModal
                     planId={planId}
                     isOpen={isQuickAddOpen}
                     onClose={() => setIsQuickAddOpen(false)}
+                    addCourseToSemester={addCourseToSemester}
+                    semesters={plan.semesters || []}
                 />
             </div>
         </div>

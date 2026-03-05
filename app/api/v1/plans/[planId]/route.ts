@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { verifyAuth, errorResponse, successResponse } from '@/lib/api-helpers';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * @swagger
  * /api/v1/plans/{planId}:
