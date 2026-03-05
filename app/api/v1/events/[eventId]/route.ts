@@ -53,7 +53,11 @@ export async function PUT(
         if (body.title && typeof body.title === 'string' && body.title.trim() !== '') {
             updates.title = body.title.trim();
         }
-        if (Array.isArray(body.days) && body.days.length > 0) {
+        if (body.type) updates.type = body.type;
+        if (body.date !== undefined) updates.date = body.date;
+        if (body.startDate !== undefined) updates.startDate = body.startDate;
+        if (body.endDate !== undefined) updates.endDate = body.endDate;
+        if (Array.isArray(body.days)) {
             updates.days = body.days;
         }
         if (body.startTime || body.endTime) {

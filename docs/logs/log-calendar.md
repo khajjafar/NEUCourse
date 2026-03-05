@@ -14,3 +14,9 @@
 - **Added Page**: `/app/calendar/page.tsx` utilizing the Application's core `AuthGuard`.
 - **Added Tests**: Vitest + React Testing Library unit tests for `useCalendarEvents`, `WeeklyCalendar`, and `EventForm`.
 - **References**: Issue #6.
+
+# Update: 2026-03-04T16:58:00
+# Description: Refactored functionality from generic weekly template to True Date-Specific Bounded Calendar
+- CalendarEvent model enhanced with `type`, `date`, `startDate`, `endDate`.
+- Upgraded `EventForm` UI with Single / Recurring radio toggles and Date Pickers.
+- Calendar rendering logic isolated accurately down to the specific YYYY-MM-DD intersection.

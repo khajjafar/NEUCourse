@@ -4,8 +4,12 @@ import { useAuth } from '@/hooks/useAuth';
 export interface CalendarEvent {
     id: string;
     title: string;
-    days: string[];
-    startTime: string; // "HH:mm" in 24h
+    type?: 'single' | 'recurring'; // Optional for backwards compatibility during migration
+    date?: string; // YYYY-MM-DD (for single events)
+    startDate?: string; // YYYY-MM-DD (for recurring events)
+    endDate?: string; // YYYY-MM-DD (for recurring events)
+    days: string[]; // required for recurring, empty/optional for single
+    startTime: string; // "HH:mm"
     endTime: string; // "HH:mm" in 24h
     location?: string;
     color?: string;

@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
-import EventForm from './EventForm';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import EventForm from '@/components/EventForm';
 
 describe('EventForm', () => {
     const mockOnSubmit = vi.fn();

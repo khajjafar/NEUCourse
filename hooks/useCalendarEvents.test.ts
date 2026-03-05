@@ -1,5 +1,5 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
-import { useCalendarEvents } from './useCalendarEvents';
+import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as useAuthHook from '@/hooks/useAuth';
 

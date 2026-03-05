@@ -10,18 +10,22 @@ interface EventFormProps {
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const PRESET_COLORS = [
-    { name: 'Indigo', value: '#4f46e5' },
-    { name: 'Red', value: '#ef4444' },
-    { name: 'Blue', value: '#3b82f6' },
-    { name: 'Green', value: '#22c55e' },
-    { name: 'Yellow', value: '#eab308' },
-    { name: 'Purple', value: '#a855f7' },
-    { name: 'Pink', value: '#ec4899' },
+    { name: 'Red', value: '#dc2626' },
+    { name: 'Dark Red', value: '#991b1b' },
+    { name: 'Black', value: '#171717' },
+    { name: 'Charcoal', value: '#3f3f46' },
     { name: 'Gray', value: '#6b7280' },
+    { name: 'Light Gray', value: '#9ca3af' },
+    { name: 'Slate', value: '#334155' },
+    { name: 'Dark Slate', value: '#0f172a' },
 ];
 
 export default function EventForm({ initialData, onSubmit, onCancel, onDelete }: EventFormProps) {
     const [title, setTitle] = useState(initialData?.title || '');
+    const [type, setType] = useState<'single' | 'recurring'>(initialData?.type || 'recurring');
+    const [date, setDate] = useState(initialData?.date || new Date().toISOString().split('T')[0]);
+    const [startDate, setStartDate] = useState(initialData?.startDate || '');
+    const [endDate, setEndDate] = useState(initialData?.endDate || '');
     const [days, setDays] = useState<string[]>(initialData?.days || []);
     const [startTime, setStartTime] = useState(initialData?.startTime || '09:00');
     const [endTime, setEndTime] = useState(initialData?.endTime || '10:00');
@@ -34,7 +38,11 @@ export default function EventForm({ initialData, onSubmit, onCancel, onDelete }:
     useEffect(() => {
         if (initialData) {
             setTitle(initialData.title);
-            setDays(initialData.days);
+            setType(initialData.type || 'recurring');
+            if (initialData.date) setDate(initialData.date);
+            if (initialData.startDate) setStartDate(initialData.startDate);
+            if (initialData.endDate) setEndDate(initialData.endDate);
+            setDays(initialData.days || []);
             setStartTime(initialData.startTime);
             setEndTime(initialData.endTime);
             setLocation(initialData.location || '');
@@ -65,9 +73,21 @@ export default function EventForm({ initialData, onSubmit, onCancel, onDelete }:
             return;
         }
 
-        if (days.length === 0) {
-            setError('At least one day must be selected.');
+        if (type === 'recurring' && days.length === 0) {
+            setError('At least one day must be selected for recurring events.');
             return;
+        }
+
+        if (type === 'single' && !date) {
+            setError('A valid date must be provided for a single event.');
+            return;
+        }
+
+        if (type === 'recurring' && startDate && endDate) {
+            if (new Date(endDate) < new Date(startDate)) {
+                setError('End Date cannot be before Start Date.');
+                return;
+            }
         }
 
         if (!validateTime()) {
@@ -77,9 +97,20 @@ export default function EventForm({ initialData, onSubmit, onCancel, onDelete }:
 
         try {
             setLoading(true);
-            await onSubmit({ title: title.trim(), days, startTime, endTime, location: location.trim(), color });
-        } catch (err: any) {
-            setError(err.message || 'Failed to save event');
+            await onSubmit({
+                title: title.trim(),
+                type,
+                date: type === 'single' ? date : undefined,
+                startDate: (type === 'recurring' && startDate) ? startDate : undefined,
+                endDate: (type === 'recurring' && endDate) ? endDate : undefined,
+                days: type === 'recurring' ? days : [],
+                startTime,
+                endTime,
+                location: location.trim(),
+                color
+            });
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Failed to save event');
         } finally {
             setLoading(false);
         }
@@ -91,8 +122,8 @@ export default function EventForm({ initialData, onSubmit, onCancel, onDelete }:
             try {
                 setLoading(true);
                 await onDelete(initialData.id);
-            } catch (err: any) {
-                setError(err.message || 'Failed to delete event');
+            } catch (err: unknown) {
+                setError(err instanceof Error ? err.message : 'Failed to delete event');
                 setLoading(false);
             }
         }
@@ -118,33 +149,85 @@ export default function EventForm({ initialData, onSubmit, onCancel, onDelete }:
                                 type="text"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                className="mt-1 block w-full rounded-md border text-black border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                className="mt-1 block w-full rounded-md border text-black border-gray-300 px-3 py-2 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                                 placeholder="e.g. Object-Oriented Design"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Days of Week</label>
-                            <div className="flex flex-wrap gap-2">
-                                {DAYS_OF_WEEK.map(day => (
-                                    <label key={day} className="inline-flex items-center cursor-pointer select-none">
-                                        <input
-                                            type="checkbox"
-                                            className="sr-only"
-                                            aria-label={day}
-                                            checked={days.includes(day)}
-                                            onChange={() => toggleDay(day)}
-                                        />
-                                        <span className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${days.includes(day)
-                                            ? 'bg-indigo-100 text-indigo-800 ring-2 ring-indigo-600 ring-offset-1'
-                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                            }`}>
-                                            {day.substring(0, 3)}
-                                        </span>
-                                    </label>
-                                ))}
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Event Type</label>
+                            <div className="flex gap-4">
+                                <label className="inline-flex items-center cursor-pointer">
+                                    <input type="radio" className="form-radio text-red-600 focus:ring-red-500" name="type" checked={type === 'single'} onChange={() => setType('single')} />
+                                    <span className="ml-2">Single Event</span>
+                                </label>
+                                <label className="inline-flex items-center cursor-pointer">
+                                    <input type="radio" className="form-radio text-red-600 focus:ring-red-500" name="type" checked={type === 'recurring'} onChange={() => setType('recurring')} />
+                                    <span className="ml-2">Recurring Event</span>
+                                </label>
                             </div>
                         </div>
+
+                        {type === 'single' ? (
+                            <div>
+                                <label htmlFor="date" className="block text-sm font-medium text-gray-700">Date</label>
+                                <input
+                                    id="date"
+                                    type="date"
+                                    value={date}
+                                    onChange={(e) => setDate(e.target.value)}
+                                    className="mt-1 block w-full text-black rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                                    required
+                                />
+                            </div>
+                        ) : (
+                            <>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Days of Week</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {DAYS_OF_WEEK.map(day => (
+                                            <label key={day} className="inline-flex items-center cursor-pointer select-none">
+                                                <input
+                                                    type="checkbox"
+                                                    className="sr-only"
+                                                    aria-label={day}
+                                                    checked={days.includes(day)}
+                                                    onChange={() => toggleDay(day)}
+                                                />
+                                                <span className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${days.includes(day)
+                                                    ? 'bg-red-100 text-red-800 ring-2 ring-red-600 ring-offset-1'
+                                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                    }`}>
+                                                    {day.substring(0, 3)}
+                                                </span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">Start Date (Optional)</label>
+                                        <input
+                                            id="startDate"
+                                            type="date"
+                                            value={startDate}
+                                            onChange={(e) => setStartDate(e.target.value)}
+                                            className="mt-1 block w-full text-black rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">End Date (Optional)</label>
+                                        <input
+                                            id="endDate"
+                                            type="date"
+                                            value={endDate}
+                                            onChange={(e) => setEndDate(e.target.value)}
+                                            className="mt-1 block w-full text-black rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        )}
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -164,7 +247,7 @@ export default function EventForm({ initialData, onSubmit, onCancel, onDelete }:
                                     type="time"
                                     value={endTime}
                                     onChange={(e) => setEndTime(e.target.value)}
-                                    className="mt-1 block w-full text-black rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    className="mt-1 block w-full text-black rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
                                 />
                             </div>
                         </div>
@@ -216,14 +299,14 @@ export default function EventForm({ initialData, onSubmit, onCancel, onDelete }:
                                     type="button"
                                     onClick={onCancel}
                                     disabled={loading}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
+                                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 transition-colors"
                                 >
                                     {loading ? 'Saving...' : 'Save Event'}
                                 </button>

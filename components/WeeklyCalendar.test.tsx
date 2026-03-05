@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import WeeklyCalendar from './WeeklyCalendar';
+import WeeklyCalendar from '@/components/WeeklyCalendar';
 
 describe('WeeklyCalendar', () => {
     const mockOnEditEvent = vi.fn();
@@ -32,7 +32,7 @@ describe('WeeklyCalendar', () => {
         });
 
         // Check for an arbitrary time entry
-        expect(screen.getByText('9 AM')).toBeInTheDocument();
+        expect(screen.getByText('8 AM')).toBeInTheDocument();
         expect(screen.getByText('12 PM')).toBeInTheDocument();
     });
 

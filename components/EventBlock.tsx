@@ -9,9 +9,9 @@ interface EventBlockProps {
 }
 
 export default function EventBlock({ event, onEdit, overlapIndex, totalOverlap }: EventBlockProps) {
-    // Time format: "HH:mm" (24h). Day starts at 7:00 (7 AM)
-    const START_HOUR = 7;
-    const END_HOUR = 22; // 10 PM
+    // Time format: "HH:mm" (24h). Day starts at 0:00 (12 AM)
+    const START_HOUR = 0;
+    const END_HOUR = 24; // Midnight
     const TOTAL_HOURS = END_HOUR - START_HOUR;
 
     const parseTime = (timeStr: string) => {
@@ -35,7 +35,7 @@ export default function EventBlock({ event, onEdit, overlapIndex, totalOverlap }
     const widthPercentage = 100 / totalOverlap;
     const leftPercentage = overlapIndex * widthPercentage;
 
-    const bgColor = event.color || '#4f46e5'; // default indigo-600
+    const bgColor = event.color || '#dc2626'; // default red-600
 
     return (
         <div

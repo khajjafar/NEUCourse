@@ -88,15 +88,19 @@ export async function POST(request: Request) {
 
     try {
         const body = await request.json();
-        const { title, days, startTime, endTime, location, color } = body;
+        const { title, type, date, startDate, endDate, days, startTime, endTime, location, color } = body;
 
         // Validation
         if (!title || typeof title !== 'string' || title.trim() === '') {
             return errorResponse('Event title is required', 'INVALID_INPUT', 400);
         }
 
-        if (!Array.isArray(days) || days.length === 0) {
-            return errorResponse('Event days array must not be empty', 'INVALID_INPUT', 400);
+        if (type === 'single') {
+            if (!date) return errorResponse('Single events require a date', 'INVALID_INPUT', 400);
+        } else if (type === 'recurring' || !type) {
+            if (!Array.isArray(days) || days.length === 0) {
+                return errorResponse('Recurring events require at least one day selected', 'INVALID_INPUT', 400);
+            }
         }
 
         if (!startTime || !endTime) {
@@ -113,7 +117,11 @@ export async function POST(request: Request) {
 
         const eventData = {
             title: title.trim(),
-            days,
+            type: type || 'recurring',
+            days: type === 'single' ? [] : (days || []),
+            date: type === 'single' ? date : null,
+            startDate: type === 'recurring' ? (startDate || null) : null,
+            endDate: type === 'recurring' ? (endDate || null) : null,
             startTime,
             endTime,
             location: location?.trim() || '',
