@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     try {
         const authResult = await verifyAuth(request);
         if (authResult.error || !authResult.user) {
-            return NextResponse.json(errorResponse('UNAUTHORIZED', 'Missing or invalid authorization token'), { status: 401 });
+            return errorResponse('Missing or invalid authorization token', 'UNAUTHORIZED', 401);
         }
 
         const eventsSnapshot = await adminDb
@@ -27,10 +27,10 @@ export async function GET(request: Request) {
             // Ensure any Firestore Timestamps are strictly stripped if not safely returned
         }));
 
-        return NextResponse.json(successResponse(events));
-    } catch (error) {
+        return successResponse(events);
+    } catch (error: unknown) {
         console.error('Error fetching events:', error);
-        return NextResponse.json(errorResponse('INTERNAL_SERVER_ERROR', 'Failed to fetch events'), { status: 500 });
+        return errorResponse('Failed to fetch events', 'INTERNAL_SERVER_ERROR', 500);
     }
 }
 
@@ -42,14 +42,14 @@ export async function POST(request: Request) {
     try {
         const authResult = await verifyAuth(request);
         if (authResult.error || !authResult.user) {
-            return NextResponse.json(errorResponse('UNAUTHORIZED', 'Missing or invalid authorization token'), { status: 401 });
+            return errorResponse('Missing or invalid authorization token', 'UNAUTHORIZED', 401);
         }
 
         const body = await request.json();
         const { title, startTime, endTime, location, color } = body;
 
         if (!title || !startTime || !endTime) {
-            return NextResponse.json(errorResponse('BAD_REQUEST', 'Missing required fields'), { status: 400 });
+            return errorResponse('Missing required fields', 'BAD_REQUEST', 400);
         }
 
         const newEvent = {
@@ -68,9 +68,11 @@ export async function POST(request: Request) {
             .collection('events')
             .add(newEvent);
 
-        return NextResponse.json(successResponse({ id: docRef.id, ...newEvent }), { status: 201 });
-    } catch (error) {
+        const savedDoc = await docRef.get();
+
+        return successResponse({ id: docRef.id, ...savedDoc.data() }, 201);
+    } catch (error: unknown) {
         console.error('Error creating event:', error);
-        return NextResponse.json(errorResponse('INTERNAL_SERVER_ERROR', 'Failed to create event'), { status: 500 });
+        return errorResponse('Failed to create event', 'INTERNAL_SERVER_ERROR', 500);
     }
 }

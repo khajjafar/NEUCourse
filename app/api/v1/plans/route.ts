@@ -3,6 +3,8 @@ import { adminDb } from '@/lib/firebase-admin';
 import { verifyAuth, errorResponse, successResponse } from '@/lib/api-helpers';
 import { FieldValue } from 'firebase-admin/firestore';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * @swagger
  * /api/v1/plans:
@@ -31,9 +33,19 @@ export async function GET(request: Request) {
             .orderBy('createdAt', 'desc')
             .get();
 
-        const plans = plansSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
+        const plans = await Promise.all(plansSnapshot.docs.map(async (doc) => {
+            const semestersSnapshot = await adminDb
+                .collection('users')
+                .doc(user.uid)
+                .collection('plans')
+                .doc(doc.id)
+                .collection('semesters')
+                .get();
+            return {
+                id: doc.id,
+                ...doc.data(),
+                semesterCount: semestersSnapshot.size
+            };
         }));
 
         return successResponse(plans);
