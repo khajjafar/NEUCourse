@@ -3,6 +3,7 @@
 import React from 'react';
 import { useSingleCourse } from '@/hooks/useSingleCourse';
 import Link from 'next/link';
+import { GraduationRequirement } from '@/hooks/usePlans';
 
 interface CourseMiniCardProps {
     courseId: string;
@@ -10,9 +11,12 @@ interface CourseMiniCardProps {
     onRemove?: () => void;
     allPlanCourses?: { courseId: string, semesterOrder: number }[];
     currentSemesterOrder?: number;
+    requirements?: GraduationRequirement[];
+    currentRequirementId?: string;
+    onUpdateAssignment?: (requirementId?: string) => void;
 }
 
-export default function CourseMiniCard({ courseId, crn, onRemove, allPlanCourses, currentSemesterOrder }: CourseMiniCardProps) {
+export default function CourseMiniCard({ courseId, crn, onRemove, allPlanCourses, currentSemesterOrder, requirements, currentRequirementId, onUpdateAssignment }: CourseMiniCardProps) {
     const { course, loading, error } = useSingleCourse(courseId);
 
     if (loading) {
@@ -97,6 +101,26 @@ export default function CourseMiniCard({ courseId, crn, onRemove, allPlanCourses
                     </span>
                 )}
             </div>
+
+            {requirements && requirements.length > 0 && onUpdateAssignment && (
+                <div
+                    className="mt-2 pt-2 border-t border-gray-100"
+                    onPointerDown={e => e.stopPropagation()}
+                    onMouseDown={e => e.stopPropagation()}
+                >
+                    <select
+                        value={currentRequirementId || ''}
+                        onChange={(e) => onUpdateAssignment(e.target.value || undefined)}
+                        className="block w-full text-xs py-1 px-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50 text-gray-700 cursor-pointer hover:bg-white transition-colors"
+                        title="Assign to requirement"
+                    >
+                        <option value="">None</option>
+                        {requirements.map(req => (
+                            <option key={req.id} value={req.id}>{req.name}</option>
+                        ))}
+                    </select>
+                </div>
+            )}
         </div>
     );
 }
