@@ -5,6 +5,7 @@ export interface Plan {
     id: string;
     name: string;
     createdAt?: { seconds: number; nanoseconds: number } | string;
+    updatedAt?: { seconds: number; nanoseconds: number } | string;
     semesterCount?: number;
 }
 

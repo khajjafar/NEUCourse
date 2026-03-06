@@ -76,6 +76,14 @@ export async function DELETE(
             courses: updatedCourses
         });
 
+        // Update the parent plan's updatedAt timestamp
+        await adminDb
+            .collection('users')
+            .doc(user.uid)
+            .collection('plans')
+            .doc(planId)
+            .update({ updatedAt: FieldValue.serverTimestamp() });
+
         return successResponse({ removed: true, courseId: courseId.trim() });
     } catch (err: any) {
         console.error('Error removing course from semester:', err);
