@@ -1,12 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
+export interface GraduationRequirement {
+    id: string;
+    name: string;
+    count: number;
+}
+
 export interface Plan {
     id: string;
     name: string;
     createdAt?: { seconds: number; nanoseconds: number } | string;
     updatedAt?: { seconds: number; nanoseconds: number } | string;
     semesterCount?: number;
+    requirements?: GraduationRequirement[];
 }
 
 export function usePlans() {
