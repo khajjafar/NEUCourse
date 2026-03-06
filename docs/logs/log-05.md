@@ -1,23 +1,31 @@
-# Log 05: Fix React Hydration Mismatch
-**Date:** 2026-03-03
-**Timestamp:** 09:03:00-05:00
-**Author:** Antigravity Agent
-**Related Bug:** Local Dev Environment Hydration Error
+---
+id: log-05
+timestamp: 2026-03-05T08:23:00-08:00
+description: "feat(plans): show specific missing course IDs in prereq/coreq warnings"
+issue: "#5"
+---
 
-## Overview
-Fixed a `Text content did not match` / Hydration Mismatch error thrown by React 18 / Next.js 14 during local development on the `<body>` element.
+# Change Log
 
-## Root Cause
-Browser extensions (e.g., password managers, Grammarly) inject attributes or nodes into the `<body>` tag before React completes hydration on the client. React expects the client HTML to exactly match the server-rendered HTML. When an extension modifies the body tag before React takes over, React throws a severe hydration mismatch error.
+## Modified
+* `components/CourseMiniCard.tsx`
+  * Replaced boolean flags for missing prereqs and coreqs with arrays of missing course IDs.
+  * Updated warning badges to display the specific missing course IDs (e.g., "Prereq needed: CS1800, CS2500") instead of a generic "Missing Prereq" message.
+  * Added `aria-label` for screen readers (e.g., "Missing prerequisites: CS1800, CS2500").
+  * Added `title` attribute for native tooltips.
+  * Preserved existing orange/blue styling for soft warnings.
 
-## Key Changes
-- **app/layout.tsx:** Added the `suppressHydrationWarning` prop to the HTML `<body>` tag. As documented by Next.js, this explicitly signals React to ignore attribute mismatches on the body tag (which is exactly what extensions modify). This safely prevents the crash without disabling strict mode or breaking actual app tree hydration.
+## Added
+* `components/CourseMiniCard.test.tsx`
+  * Added test file for `CourseMiniCard.tsx`.
+  * Covered 6 scenarios:
+    1. One prereq missing.
+    2. Multiple prereqs missing.
+    3. All prereqs satisfied.
+    4. Missing coreq.
+    5. No prereqs/coreqs required.
+    6. Verify correct aria-label.
+  * Used `vi.mock` for `useSingleCourse` and `@/lib/firebase`.
 
-
-## Testing Instructions (Development)
-**How to test interactively:** Run `npm run dev` and open the application with various browser extensions (like password managers) enabled. Check the developer console to confirm that the "React Hydration Mismatch" error on the `<body>` tag no longer appears.
-
-**Automated Tests Added:**
-- **What:** N/A (Configuration-only fix).
-- **Reasoning:** Fixing the layout's HTML hydration mismatch via Next.js `suppressHydrationWarning` prevents dev-environment crashes.
-- **How to run:** Visual confirmation inside browser DevTools.
+## Notes
+Improves accessibility and UX by helping students know exactly which courses they need to add to their degree plan to fix warnings. Does not block students from progressing (soft warnings only).

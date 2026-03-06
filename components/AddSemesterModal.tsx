@@ -7,10 +7,11 @@ interface AddSemesterModalProps {
     planId: string | null;
     isOpen: boolean;
     onClose: () => void;
+    addSemester: (name: string, order: number) => Promise<void>;
+    currentSemesterCount: number;
 }
 
-export default function AddSemesterModal({ planId, isOpen, onClose }: AddSemesterModalProps) {
-    const { plan, addSemester } = usePlanDetails(planId);
+export default function AddSemesterModal({ planId, isOpen, onClose, addSemester, currentSemesterCount }: AddSemesterModalProps) {
     const [newSemesterName, setNewSemesterName] = useState('');
     const [isCreatingSem, setIsCreatingSem] = useState(false);
 
@@ -31,7 +32,7 @@ export default function AddSemesterModal({ planId, isOpen, onClose }: AddSemeste
 
         try {
             setIsCreatingSem(true);
-            const order = plan?.semesters ? plan.semesters.length + 1 : 1;
+            const order = currentSemesterCount + 1;
             await addSemester(newSemesterName, order);
             setNewSemesterName('');
             onClose();

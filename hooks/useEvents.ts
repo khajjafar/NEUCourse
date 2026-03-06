@@ -35,9 +35,10 @@ export function useEvents() {
             if (!res.ok) throw new Error(data.error?.message || 'Failed to fetch events');
 
             setEvents(data.data || []);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Events fetch error:', err);
-            setError(err.message || 'Failed to fetch events');
+            const message = err instanceof Error ? err.message : 'Failed to fetch events';
+            setError(message);
         } finally {
             setLoading(false);
         }
@@ -67,8 +68,32 @@ export function useEvents() {
 
             setEvents(prev => [...prev, data.data]);
             return data.data;
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Failed to add event:', err);
+            throw err;
+        }
+    };
+
+    const updateEvent = async (eventId: string, eventData: Partial<EventItem>) => {
+        if (!user) throw new Error("Must be logged in to update an event");
+        try {
+            const token = await user.getIdToken();
+            const res = await fetch(`/api/v1/events/${eventId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(eventData)
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error?.message || 'Failed to update event');
+
+            await fetchEvents();
+            return data.data;
+        } catch (err: unknown) {
+            console.error('Failed to update event:', err);
             throw err;
         }
     };
@@ -88,11 +113,11 @@ export function useEvents() {
             if (!res.ok) throw new Error(data.error?.message || 'Failed to delete event');
 
             setEvents(prev => prev.filter(e => e.id !== eventId));
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Failed to delete event:', err);
             throw err;
         }
     };
 
-    return { events, loading, error, addEvent, deleteEvent, refreshEvents: fetchEvents };
+    return { events, loading, error, addEvent, updateEvent, deleteEvent, refreshEvents: fetchEvents };
 }

@@ -1,0 +1,14 @@
+# Log 07
+- ID: log-07
+- Timestamp: 2026-03-05T07:13:00-08:00
+- Description: Implemented Add to Calendar functionality from degree plan.
+  - Created `parseMeetingTime` utility to convert course section meeting strings into usable data (e.g. `MWF 10:30am - 11:35am`).
+  - Wrote comprehensive unit tests for `parseMeetingTime`.
+  - Built `AddToCalendarButton` component invoking the `useEvents` hook to push events to Firestore.
+  - Replaced missing `lucide-react` dependency with `@heroicons/react` in component.
+  - Installed `date-fns` for time calculation in component.
+  - Wrote unit tests for `AddToCalendarButton` ensuring proper behavior when adding schedules.
+  - Built `AddScheduleToCalendarModal` to organize the UI cleanly next to other plan actions.
+  - Removed inline calendar buttons from `CourseMiniCard`.
+  - Fixed parsing bug in `parseMeetingTime` to handle extra spaces separating AM/PM and days (e.g. `M W R 1:35 pm - 2:40 pm`).
+- Issue: #7
