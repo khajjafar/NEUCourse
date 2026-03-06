@@ -13,7 +13,6 @@ export interface Plan {
     createdAt?: { seconds: number; nanoseconds: number } | string;
     updatedAt?: { seconds: number; nanoseconds: number } | string;
     semesterCount?: number;
-    requirements?: GraduationRequirement[];
 }
 
 export function usePlans() {

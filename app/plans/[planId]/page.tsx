@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePlanDetails } from '@/hooks/usePlanDetails';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { useRouter, useParams } from 'next/navigation';
 import CourseMiniCard from '@/components/CourseMiniCard';
 import Link from 'next/link';
@@ -82,9 +83,10 @@ export default function PlanDetailsPage() {
         moveCourseBetweenSemesters,
         removeCourseFromSemester,
         addSemester,
-        addCourseToSemester,
-        updateRequirements
+        addCourseToSemester
     } = usePlanDetails(planId);
+
+    const { profile, updateRequirements } = useUserProfile();
 
     const router = useRouter();
 
@@ -346,7 +348,7 @@ export default function PlanDetailsPage() {
                 <GraduationRequirementsModal
                     isOpen={isRequirementsModalOpen}
                     onClose={() => setIsRequirementsModalOpen(false)}
-                    requirements={plan.requirements}
+                    requirements={profile?.requirements}
                     updateRequirements={updateRequirements}
                 />
 

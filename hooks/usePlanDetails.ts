@@ -258,29 +258,7 @@ export function usePlanDetails(planId: string | null) {
         }
     };
 
-    const updateRequirements = async (requirements: GraduationRequirement[]) => {
-        if (!user || !planId) throw new Error("Missing authentication or Plan ID.");
 
-        // Optimistic UI update
-        setPlan(prevPlan => prevPlan ? { ...prevPlan, requirements } : prevPlan);
-
-        const token = await user.getIdToken();
-        const response = await fetch(`/api/v1/plans/${planId}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({ requirements })
-        });
-
-        if (!response.ok) {
-            // Revert on failure
-            await fetchPlanDetails();
-            const data = await response.json();
-            throw new Error(data.error?.message || 'Failed to update requirements');
-        }
-    };
 
     return {
         plan,
@@ -291,7 +269,6 @@ export function usePlanDetails(planId: string | null) {
         reorderSemesters,
         moveCourseBetweenSemesters,
         addCourseToSemester,
-        removeCourseFromSemester,
-        updateRequirements
+        removeCourseFromSemester
     };
 }

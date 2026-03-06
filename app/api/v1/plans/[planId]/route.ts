@@ -216,21 +216,6 @@ export async function PUT(
  *             properties:
  *               name:
  *                 type: string
- *               requirements:
- *                 type: array
- *                 items:
- *                   type: object
- *                   required:
- *                     - id
- *                     - name
- *                     - count
- *                   properties:
- *                     id:
- *                       type: string
- *                     name:
- *                       type: string
- *                     count:
- *                       type: number
  *     responses:
  *       200:
  *         description: Plan updated successfully
@@ -269,18 +254,7 @@ export async function PATCH(
             updateData.name = body.name.trim();
         }
 
-        if (body.requirements !== undefined) {
-            if (!Array.isArray(body.requirements)) {
-                return errorResponse('Requirements must be an array', 'BAD_REQUEST', 400);
-            }
-            // Basic validation
-            for (const req of body.requirements) {
-                if (!req.id || !req.name || typeof req.count !== 'number') {
-                    return errorResponse('Invalid requirement format', 'BAD_REQUEST', 400);
-                }
-            }
-            updateData.requirements = body.requirements;
-        }
+
 
         const planRef = adminDb
             .collection('users')

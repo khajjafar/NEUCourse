@@ -243,32 +243,4 @@ describe('usePlanDetails Hook', () => {
         expect(result.current.plan?.semesters[1].courses).toEqual(['CS2000']);
     });
 
-    it('should update requirements optimistically', async () => {
-        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
-            user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
-        } as any);
-
-        const initialMock = {
-            id: 'p1', name: 'Plan', semesters: [], requirements: []
-        };
-
-        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
-        const { result } = renderHook(() => usePlanDetails('p1'));
-        await waitFor(() => expect(result.current.plan).not.toBeNull());
-
-        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: { id: 'p1' } }) });
-
-        const newRequirements = [{ id: 'req1', name: 'Electives', count: 4 }];
-
-        await act(async () => {
-            await result.current.updateRequirements(newRequirements);
-        });
-
-        expect(mockFetch).toHaveBeenCalledWith('/api/v1/plans/p1', expect.objectContaining({
-            method: 'PATCH',
-            body: JSON.stringify({ requirements: newRequirements })
-        }));
-
-        expect(result.current.plan?.requirements).toEqual(newRequirements);
-    });
 });
