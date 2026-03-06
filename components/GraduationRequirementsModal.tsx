@@ -14,7 +14,7 @@ interface GraduationRequirementsModalProps {
 export default function GraduationRequirementsModal({
     isOpen,
     onClose,
-    requirements = [],
+    requirements,
     updateRequirements
 }: GraduationRequirementsModalProps) {
     const [localReqs, setLocalReqs] = useState<GraduationRequirement[]>([]);
@@ -25,7 +25,7 @@ export default function GraduationRequirementsModal({
 
     useEffect(() => {
         if (isOpen) {
-            setLocalReqs([...requirements]);
+            setLocalReqs(requirements ? [...requirements] : []);
             setNewName('');
             setNewCount('');
             setError(null);
