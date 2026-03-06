@@ -11,6 +11,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import AddSemesterModal from '@/components/AddSemesterModal';
 import QuickAddModal from '@/components/QuickAddModal';
 import GraduationRequirementsModal from '@/components/GraduationRequirementsModal';
+import RequirementProgressBars from '@/components/RequirementProgressBars';
 import { TrashIcon, PlusIcon, MagnifyingGlassPlusIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
 import { fetchCourseCached } from '@/hooks/useSingleCourse';
 import { CourseAssignment } from '@/hooks/usePlanDetails';
@@ -83,7 +84,8 @@ export default function PlanDetailsPage() {
         moveCourseBetweenSemesters,
         removeCourseFromSemester,
         addSemester,
-        addCourseToSemester
+        addCourseToSemester,
+        updateCourseAssignment
     } = usePlanDetails(planId);
 
     const { profile, updateRequirements } = useUserProfile();
@@ -224,6 +226,8 @@ export default function PlanDetailsPage() {
                     </div>
                 </div>
 
+                <RequirementProgressBars requirements={profile?.requirements} semesters={plan.semesters} />
+
                 <DragDropContext onDragEnd={onDragEnd}>
                     <Droppable droppableId="board" type="semester" direction="horizontal">
                         {(provided) => (
@@ -308,6 +312,12 @@ export default function PlanDetailsPage() {
                                                                                             crn={crn}
                                                                                             allPlanCourses={allPlanCourses}
                                                                                             currentSemesterOrder={semester.order}
+                                                                                            requirements={profile?.requirements}
+                                                                                            currentRequirementId={typeof courseItem === 'object' ? courseItem.requirementId : undefined}
+                                                                                            onUpdateAssignment={(reqId) => {
+                                                                                                updateCourseAssignment(semester.id, cid, { requirementId: reqId })
+                                                                                                    .catch(err => alert(err.message));
+                                                                                            }}
                                                                                             onRemove={() => {
                                                                                                 if (confirm(`Remove ${cid} from ${semester.name}?`)) {
                                                                                                     removeCourseFromSemester(semester.id, cid)

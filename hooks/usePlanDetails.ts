@@ -262,32 +262,29 @@ export function usePlanDetails(planId: string | null) {
     const updateCourseAssignment = async (semId: string, courseId: string, updates: Partial<CourseAssignment>) => {
         if (!user || !planId || !plan) throw new Error("Missing authentication or Plan ID.");
 
-        let srcCourses: (string | CourseAssignment)[] = [];
-        let semesterFound = false;
+        const targetSemester = plan.semesters.find(s => s.id === semId);
+        if (!targetSemester) return;
+
+        const newCourses = targetSemester.courses.map(c => {
+            const targetId = typeof c === 'string' ? c : c.courseId;
+            if (targetId === courseId) {
+                const currentObj = typeof c === 'string' ? { courseId: c } : c;
+                return { ...currentObj, ...updates } as CourseAssignment;
+            }
+            return c;
+        });
 
         // Optimistic UI update
         setPlan(prevPlan => {
             if (!prevPlan) return prevPlan;
             const updatedSemesters = prevPlan.semesters.map(sem => {
                 if (sem.id === semId) {
-                    semesterFound = true;
-                    const newCourses = sem.courses.map(c => {
-                        const targetId = typeof c === 'string' ? c : c.courseId;
-                        if (targetId === courseId) {
-                            const currentObj = typeof c === 'string' ? { courseId: c } : c;
-                            return { ...currentObj, ...updates } as CourseAssignment;
-                        }
-                        return c;
-                    });
-                    srcCourses = newCourses;
                     return { ...sem, courses: newCourses };
                 }
                 return sem;
             });
             return { ...prevPlan, semesters: updatedSemesters };
         });
-
-        if (!semesterFound) return;
 
         const token = await user.getIdToken();
         const response = await fetch(`/api/v1/plans/${planId}/semesters/${semId}`, {
@@ -296,7 +293,7 @@ export function usePlanDetails(planId: string | null) {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`
             },
-            body: JSON.stringify({ courses: srcCourses })
+            body: JSON.stringify({ courses: newCourses })
         });
 
         if (!response.ok) {
