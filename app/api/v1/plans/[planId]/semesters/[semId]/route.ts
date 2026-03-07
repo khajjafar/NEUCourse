@@ -50,7 +50,7 @@ export async function DELETE(
             .update({ updatedAt: FieldValue.serverTimestamp() });
 
         return successResponse({ deleted: true, semId });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Failed to delete semester:', err);
         return errorResponse('Failed to delete semester', 'INTERNAL_SERVER_ERROR', 500);
     }
@@ -68,7 +68,7 @@ export async function PATCH(
         const body = await request.json();
         const { order, courses, name } = body;
 
-        const updateData: any = {};
+        const updateData: Record<string, unknown> = {};
         if (order !== undefined) updateData.order = order;
         if (name !== undefined) updateData.name = name;
         if (courses !== undefined) updateData.courses = courses; // direct array overwrite explicitly targeting index bindings via mutation
@@ -96,8 +96,8 @@ export async function PATCH(
             .update({ updatedAt: FieldValue.serverTimestamp() });
 
         return successResponse({ updated: true, semId });
-    } catch (err: any) {
-        if (err.code === 5) {
+    } catch (err: unknown) {
+        if ((err as { code?: number }).code === 5) {
             return errorResponse('Target Plan or Semester does not exist', 'NOT_FOUND', 404);
         }
         return errorResponse('Failed to update semester', 'INTERNAL_SERVER_ERROR', 500);

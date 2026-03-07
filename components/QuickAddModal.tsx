@@ -21,7 +21,9 @@ export default function QuickAddModal({ planId, isOpen, onClose, addCourseToSeme
     // Reset state when closing / opening
     useEffect(() => {
         if (isOpen) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setQuery('');
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSelectedCourseId(null);
         }
     }, [isOpen, setQuery]);
@@ -143,8 +145,8 @@ function CourseDetailsSection({ courseId, addCourseToSemester, semesters }: { co
                 setSuccessMsg(null);
                 setSelectedCrn(null);
             }, 2500);
-        } catch (err: any) {
-            alert(err.message || "Failed to add section.");
+        } catch (err: unknown) {
+            alert(err instanceof Error ? err.message : "Failed to add section.");
         } finally {
             setAddingToSemId(null);
         }
@@ -165,7 +167,7 @@ function CourseDetailsSection({ courseId, addCourseToSemester, semesters }: { co
             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 px-1">Available Sections</div>
 
             <div className="max-h-[350px] overflow-y-auto pr-2 custom-scrollbar space-y-2">
-                {course.sections.map((sec: any) => {
+                {course.sections.map((sec) => {
                     const isAdded = semesters.some(sem => sem.courses.some(c => typeof c === 'string' ? c === courseId : (c.courseId === courseId && c.crn === sec.crn)));
 
                     return (
@@ -179,8 +181,8 @@ function CourseDetailsSection({ courseId, addCourseToSemester, semesters }: { co
                                 </div>
                                 <div className="text-gray-500 text-xs mt-1.5 flex items-center gap-2">
                                     <span>👨‍🏫 {sec.professor || "TBA"}</span>
-                                    <span>📍 {sec.location || "TBA"}</span>
-                                    <span>🪑 {sec.seatsAvailable} / {sec.seatsCapacity} seats</span>
+                                    <span>📍 {sec.rooms || "TBA"}</span>
+                                    <span>🪑 {sec.seats || "TBA"} seats</span>
                                 </div>
                             </div>
 

@@ -25,6 +25,7 @@ interface CourseDetailClientProps {
 export default function CourseDetailClient({ courseId, isModal = false }: CourseDetailClientProps) {
     const { course, loading, error } = useSingleCourse(courseId);
     const router = useRouter();
+    const displayCourseId = formatCourseId(decodeURIComponent(courseId));
 
     // Close the page/modal on Esc key
     useEffect(() => {
@@ -75,7 +76,7 @@ export default function CourseDetailClient({ courseId, isModal = false }: Course
                         <ArrowLeftIcon className="w-6 h-6 text-gray-700" />
                     </button>
                     <div className="font-semibold text-gray-900 border px-3 py-1 rounded-full text-sm bg-gray-50">
-                        {courseId}
+                        {displayCourseId}
                     </div>
                 </div>
 
@@ -106,7 +107,7 @@ export default function CourseDetailClient({ courseId, isModal = false }: Course
                                 </svg>
                             </div>
                             <h2 className="text-2xl font-bold text-gray-900 mb-3">{error}</h2>
-                            <p className="text-gray-500 mb-8 max-w-sm mx-auto">We couldn't find the requested course details.</p>
+                            <p className="text-gray-500 mb-8 max-w-sm mx-auto">We couldn&apos;t find the requested course details.</p>
                             <button
                                 onClick={() => router.back()}
                                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium shadow-sm hover:shadow"

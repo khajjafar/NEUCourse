@@ -130,7 +130,7 @@ export default function PlansPage() {
                         </div>
                     ) : plans.length === 0 ? (
                         <div className="p-8 text-center text-gray-500">
-                            You haven't created any degree plans yet.
+                            You haven&apos;t created any degree plans yet.
                         </div>
                     ) : (
                         <ul role="list" className="divide-y divide-gray-200">

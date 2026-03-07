@@ -24,8 +24,8 @@ export default function RegisterPage() {
         try {
             await createUserWithEmailAndPassword(auth, email, password);
             router.push("/dashboard");
-        } catch (err: any) {
-            if (err.code === "auth/email-already-in-use") {
+        } catch (err: unknown) {
+            if ((err as { code?: string }).code === "auth/email-already-in-use") {
                 setError("This email is already registered. Please log in.");
             } else {
                 setError("An error occurred during registration. Please try again.");

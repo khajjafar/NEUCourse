@@ -48,8 +48,8 @@ export default function AddToPlanDropdown({ courseId, crn }: AddToPlanDropdownPr
                 setSuccessMessage(null);
                 setSelectedPlanId(null);
             }, 2000);
-        } catch (err: any) {
-            alert(err.message || 'Failed to add course');
+        } catch (err: unknown) {
+            alert(err instanceof Error ? err.message : 'Failed to add course');
         } finally {
             setIsAdding(false);
         }

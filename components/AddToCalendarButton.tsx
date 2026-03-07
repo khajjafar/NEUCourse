@@ -45,7 +45,7 @@ export function AddToCalendarButton({ courseId, crn, courseName }: AddToCalendar
 
         try {
             const course = await fetchCourseCached(courseId);
-            const section = course?.sections?.find((sec: any) => sec.crn === crn);
+            const section = course?.sections?.find((sec) => sec.crn === crn);
 
             if (!section) {
                 setStatus('error');

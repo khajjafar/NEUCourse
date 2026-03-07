@@ -9,9 +9,12 @@ import { useEvents } from "@/hooks/useEvents";
 import Link from "next/link";
 import { formatDistanceToNow, addDays, isAfter, isBefore } from "date-fns";
 
-function getTimestampDate(timestamp: any): Date | null {
+function getTimestampDate(timestamp: { toDate?: () => Date; _seconds?: number; seconds?: number } | string | number | null | undefined): Date | null {
     if (!timestamp) return null;
-    if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+    if (typeof timestamp === 'string' || typeof timestamp === 'number') {
+        return new Date(timestamp);
+    }
+    if (typeof timestamp.toDate === 'function') {
         return timestamp.toDate();
     }
     if (timestamp._seconds !== undefined) {
@@ -19,9 +22,6 @@ function getTimestampDate(timestamp: any): Date | null {
     }
     if (timestamp.seconds !== undefined) {
         return new Date(timestamp.seconds * 1000);
-    }
-    if (typeof timestamp === 'string' || typeof timestamp === 'number') {
-        return new Date(timestamp);
     }
     return null;
 }

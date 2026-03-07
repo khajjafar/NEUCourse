@@ -89,9 +89,9 @@ export async function POST(
             .update({ updatedAt: FieldValue.serverTimestamp() });
 
         return successResponse({ added: true, courseId: courseId.trim(), crn });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Error adding course to semester:', err);
-        if (err.code === 5) { // GRPC NOT_FOUND equivalent in Firestore update()
+        if ((err as { code?: number }).code === 5) { // GRPC NOT_FOUND equivalent in Firestore update()
             return errorResponse('Target Plan or Semester does not exist', 'NOT_FOUND', 404);
         }
         return errorResponse('Failed to add course', 'INTERNAL_SERVER_ERROR', 500);
