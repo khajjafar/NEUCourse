@@ -78,7 +78,7 @@ export default function PlanDetailsPage() {
     const {
         plan,
         loading: planLoading,
-        error,
+        error: _planError,
         deleteSemester,
         reorderSemesters,
         moveCourseBetweenSemesters,
