@@ -80,6 +80,14 @@ export async function POST(
             courses: FieldValue.arrayUnion(coursePayload)
         });
 
+        // Update the parent plan's updatedAt timestamp
+        await adminDb
+            .collection('users')
+            .doc(user.uid)
+            .collection('plans')
+            .doc(planId)
+            .update({ updatedAt: FieldValue.serverTimestamp() });
+
         return successResponse({ added: true, courseId: courseId.trim(), crn });
     } catch (err: any) {
         console.error('Error adding course to semester:', err);

@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Plan } from './usePlans';
+import { Plan, GraduationRequirement } from './usePlans';
 
 export interface CourseAssignment {
     courseId: string;
     crn?: string;
+    requirementId?: string;
 }
 
 export interface Semester {
@@ -258,6 +259,52 @@ export function usePlanDetails(planId: string | null) {
         }
     };
 
+    const updateCourseAssignment = async (semId: string, courseId: string, updates: Partial<CourseAssignment>) => {
+        if (!user || !planId || !plan) throw new Error("Missing authentication or Plan ID.");
+
+        const targetSemester = plan.semesters.find(s => s.id === semId);
+        if (!targetSemester) return;
+
+        const newCourses = targetSemester.courses.map(c => {
+            const targetId = typeof c === 'string' ? c : c.courseId;
+            if (targetId === courseId) {
+                const currentObj = typeof c === 'string' ? { courseId: c } : c;
+                return { ...currentObj, ...updates } as CourseAssignment;
+            }
+            return c;
+        });
+
+        // Optimistic UI update
+        setPlan(prevPlan => {
+            if (!prevPlan) return prevPlan;
+            const updatedSemesters = prevPlan.semesters.map(sem => {
+                if (sem.id === semId) {
+                    return { ...sem, courses: newCourses };
+                }
+                return sem;
+            });
+            return { ...prevPlan, semesters: updatedSemesters };
+        });
+
+        const token = await user.getIdToken();
+        const response = await fetch(`/api/v1/plans/${planId}/semesters/${semId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ courses: newCourses })
+        });
+
+        if (!response.ok) {
+            // Revert on failure
+            await fetchPlanDetails();
+            const data = await response.json();
+            throw new Error(data.error?.message || 'Failed to update course assignment');
+        }
+    };
+
+
     return {
         plan,
         loading: loading || authLoading,
@@ -267,6 +314,7 @@ export function usePlanDetails(planId: string | null) {
         reorderSemesters,
         moveCourseBetweenSemesters,
         addCourseToSemester,
-        removeCourseFromSemester
+        removeCourseFromSemester,
+        updateCourseAssignment
     };
 }

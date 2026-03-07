@@ -73,6 +73,14 @@ export async function POST(
             .collection('semesters')
             .add(semesterData);
 
+        // Update the parent plan's updatedAt timestamp
+        await adminDb
+            .collection('users')
+            .doc(user.uid)
+            .collection('plans')
+            .doc(planId)
+            .update({ updatedAt: FieldValue.serverTimestamp() });
+
         return successResponse({ id: semesterRef.id, name: semesterData.name, order: semesterData.order, courses: [] }, 201);
     } catch (err) {
         console.error('Error creating semester:', err);

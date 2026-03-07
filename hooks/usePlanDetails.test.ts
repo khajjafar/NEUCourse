@@ -242,4 +242,50 @@ describe('usePlanDetails Hook', () => {
         expect(result.current.plan?.semesters[1].id).toBe('sem2');
         expect(result.current.plan?.semesters[1].courses).toEqual(['CS2000']);
     });
+
+    it('should update a course assignment optimistically', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
+        } as any);
+
+        const initialMock = {
+            id: 'p1', name: 'Plan', semesters: [
+                { id: 'sem1', name: 'Fall', courses: ['CS3500', { courseId: 'CS2510' }] }
+            ]
+        };
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({ data: initialMock })
+        });
+
+        const { result } = renderHook(() => usePlanDetails('p1'));
+        await waitFor(() => expect(result.current.plan?.semesters[0].courses).toHaveLength(2));
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({ data: { updated: true } })
+        });
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({ data: { updated: true } })
+        });
+
+        await act(async () => {
+            await result.current.updateCourseAssignment('sem1', 'CS3500', { requirementId: 'req1' });
+        });
+        await act(async () => {
+            await result.current.updateCourseAssignment('sem1', 'CS2510', { requirementId: 'req2', crn: '12345' });
+        });
+
+        expect(mockFetch).toHaveBeenCalledWith('/api/v1/plans/p1/semesters/sem1', expect.objectContaining({
+            method: 'PATCH'
+        }));
+
+        const finalCourses = result.current.plan?.semesters[0].courses as any[];
+        expect(finalCourses[0]).toEqual(expect.objectContaining({ courseId: 'CS3500', requirementId: 'req1' }));
+        expect(finalCourses[1]).toEqual(expect.objectContaining({ courseId: 'CS2510', requirementId: 'req2', crn: '12345' }));
+    });
+
 });

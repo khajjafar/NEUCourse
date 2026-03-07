@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import CourseMiniCard from './CourseMiniCard';
@@ -157,5 +157,38 @@ describe('CourseMiniCard', () => {
 
         const prereqBadge = screen.getByText('Prereq needed: CS1800');
         expect(prereqBadge).toHaveAttribute('aria-label', 'Missing prerequisites: CS1800');
+    });
+
+    it('renders requirement dropdown and triggers callback on change', () => {
+        vi.mocked(useSingleCourse).mockReturnValue({
+            course: mockCourse as any,
+            loading: false,
+            error: null,
+        });
+
+        const mockOnUpdateAssignment = vi.fn();
+        const mockRequirements = [
+            { id: 'req1', name: 'Major Core', count: 5 },
+            { id: 'req2', name: 'Elective', count: 2 },
+        ];
+
+        render(
+            <CourseMiniCard
+                courseId="CS3500"
+                requirements={mockRequirements as any}
+                currentRequirementId="req1"
+                onUpdateAssignment={mockOnUpdateAssignment}
+            />
+        );
+
+        const select = screen.getByTitle('Assign to requirement');
+        expect(select).toBeInTheDocument();
+        expect(select).toHaveValue('req1');
+
+        fireEvent.change(select, { target: { value: 'req2' } });
+        expect(mockOnUpdateAssignment).toHaveBeenCalledWith('req2');
+
+        fireEvent.change(select, { target: { value: '' } });
+        expect(mockOnUpdateAssignment).toHaveBeenCalledWith(undefined);
     });
 });

@@ -7,13 +7,41 @@ import { AuthGuard } from "@/components/AuthGuard";
 import { usePlans } from "@/hooks/usePlans";
 import { useEvents } from "@/hooks/useEvents";
 import Link from "next/link";
+import { formatDistanceToNow, addDays, isAfter, isBefore } from "date-fns";
+
+function getTimestampDate(timestamp: any): Date | null {
+    if (!timestamp) return null;
+    if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+        return timestamp.toDate();
+    }
+    if (timestamp._seconds !== undefined) {
+        return new Date(timestamp._seconds * 1000);
+    }
+    if (timestamp.seconds !== undefined) {
+        return new Date(timestamp.seconds * 1000);
+    }
+    if (typeof timestamp === 'string' || typeof timestamp === 'number') {
+        return new Date(timestamp);
+    }
+    return null;
+}
 
 export default function DashboardPage() {
     const { user, logout } = useAuth();
     const { plans, loading: plansLoading } = usePlans();
     const { events, loading: eventsLoading } = useEvents();
 
-    const upcomingEvents = events.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()).slice(0, 5);
+    const now = new Date();
+    const sevenDaysFromNow = addDays(now, 7);
+
+    const upcomingEvents = events
+        .filter(event => {
+            const eventDate = new Date(event.startTime);
+            // event is in the future but less than 7 days from now
+            return isAfter(eventDate, now) && isBefore(eventDate, sevenDaysFromNow);
+        })
+        .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+        .slice(0, 5);
 
     return (
         <AuthGuard>
@@ -47,14 +75,22 @@ export default function DashboardPage() {
                                         </div>
                                     ) : (
                                         <div className="space-y-3">
-                                            {plans.map(plan => (
-                                                <Link key={plan.id} href={`/plans/${plan.id}`} className="block border border-gray-200 rounded-lg p-4 hover:border-indigo-300 hover:bg-indigo-50 transition-colors">
-                                                    <div className="flex justify-between items-center">
-                                                        <h3 className="font-semibold text-gray-900">{plan.name}</h3>
-                                                        <span className="text-sm text-gray-500">{plan.semesterCount || 0} Semesters</span>
-                                                    </div>
-                                                </Link>
-                                            ))}
+                                            {plans.map(plan => {
+                                                const dateObj = getTimestampDate(plan.updatedAt || plan.createdAt);
+                                                const timeString = dateObj ? formatDistanceToNow(dateObj, { addSuffix: true }) : '';
+
+                                                return (
+                                                    <Link key={plan.id} href={`/plans/${plan.id}`} className="block border border-gray-200 rounded-lg p-4 hover:border-indigo-300 hover:bg-indigo-50 transition-colors">
+                                                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                                                            <h3 className="font-semibold text-gray-900">{plan.name}</h3>
+                                                            <div className="flex items-center gap-3 text-sm text-gray-500">
+                                                                {timeString && <span className="bg-gray-100 px-2 py-0.5 rounded text-xs text-gray-600">Updated {timeString}</span>}
+                                                                <span>{plan.semesterCount || 0} Semesters</span>
+                                                            </div>
+                                                        </div>
+                                                    </Link>
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </section>

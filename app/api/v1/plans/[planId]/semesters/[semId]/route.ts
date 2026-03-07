@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { verifyAuth, errorResponse, successResponse } from '@/lib/api-helpers';
+import { FieldValue } from 'firebase-admin/firestore';
 
 /**
  * @swagger
@@ -39,6 +40,15 @@ export async function DELETE(
             .doc(semId);
 
         await semesterRef.delete();
+
+        // Update the parent plan's updatedAt timestamp
+        await adminDb
+            .collection('users')
+            .doc(user.uid)
+            .collection('plans')
+            .doc(planId)
+            .update({ updatedAt: FieldValue.serverTimestamp() });
+
         return successResponse({ deleted: true, semId });
     } catch (err: any) {
         console.error('Failed to delete semester:', err);
@@ -76,6 +86,15 @@ export async function PATCH(
             .doc(semId);
 
         await semesterRef.update(updateData);
+
+        // Update the parent plan's updatedAt timestamp
+        await adminDb
+            .collection('users')
+            .doc(user.uid)
+            .collection('plans')
+            .doc(planId)
+            .update({ updatedAt: FieldValue.serverTimestamp() });
+
         return successResponse({ updated: true, semId });
     } catch (err: any) {
         if (err.code === 5) {

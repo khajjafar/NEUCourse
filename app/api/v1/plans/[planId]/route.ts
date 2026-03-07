@@ -193,3 +193,87 @@ export async function PUT(
         return errorResponse('Failed to rename degree plan', 'INTERNAL_SERVER_ERROR', 500);
     }
 }
+
+/**
+ * @swagger
+ * /api/v1/plans/{planId}:
+ *   patch:
+ *     summary: Update a specific degree plan (partial update)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: planId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Plan updated successfully
+ *       400:
+ *         description: Invalid request body
+ *       404:
+ *         description: Plan not found
+ */
+export async function PATCH(
+    request: NextRequest,
+    context: { params: Promise<{ planId: string }> }
+) {
+    const { user, error } = await verifyAuth(request);
+
+    if (error || !user) {
+        return errorResponse(error || 'Unauthorized', 'UNAUTHORIZED', 401);
+    }
+
+    try {
+        const { planId } = await context.params;
+        const body = await request.json().catch(() => ({}));
+
+        if (Object.keys(body).length === 0) {
+            return errorResponse('Request body is empty', 'BAD_REQUEST', 400);
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const updateData: any = {
+            updatedAt: FieldValue.serverTimestamp()
+        };
+
+        if (body.name !== undefined) {
+            if (typeof body.name !== 'string' || body.name.trim() === '') {
+                return errorResponse('Valid plan name is required', 'BAD_REQUEST', 400);
+            }
+            updateData.name = body.name.trim();
+        }
+
+
+
+        const planRef = adminDb
+            .collection('users')
+            .doc(user.uid)
+            .collection('plans')
+            .doc(planId);
+
+        const planDoc = await planRef.get();
+
+        if (!planDoc.exists) {
+            return errorResponse(`Plan ${planId} not found.`, 'NOT_FOUND', 404);
+        }
+
+        await planRef.update(updateData);
+
+        return successResponse({ id: planId, ...updateData });
+    } catch (err) {
+        console.error('Error updating plan:', err);
+        return errorResponse('Failed to update degree plan', 'INTERNAL_SERVER_ERROR', 500);
+    }
+}
+
