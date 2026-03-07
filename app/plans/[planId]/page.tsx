@@ -50,7 +50,7 @@ function SemesterCreditPill({ courses }: { courses: (string | CourseAssignment)[
                     setCredits(total);
                     setLoading(false);
                 }
-            } catch (error) {
+            } catch {
                 if (mounted) setLoading(false);
             }
         };
@@ -78,7 +78,7 @@ export default function PlanDetailsPage() {
     const {
         plan,
         loading: planLoading,
-        error: _planError,
+        error,
         deleteSemester,
         reorderSemesters,
         moveCourseBetweenSemesters,
