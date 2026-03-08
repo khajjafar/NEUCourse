@@ -34,3 +34,38 @@ The application provides class meeting times strictly pulled during runtime extr
 - **What:** Updates to `CourseDetailClient.test.tsx` mocking undefined vs. populated `sections: []`.
 - **Reasoning:** Prevents application crashes if the scraped class lacks explicit schedule boundaries, validating strict default fallbacks.
 - **How to run:** Execute `npm run test`.
+
+---
+
+## Issue #19 (Sprint 2): Expand CI/CD Pipeline — Coverage, Audit, Vercel Deploy
+
+### Date
+March 7, 2026
+
+### Changes Made
+
+#### 1. Coverage thresholds (`vitest.config.ts`)
+Added `thresholds` to the coverage config:
+- statements: 80%, functions: 80%, lines: 80%, branches: 60%
+- branches set to 60% (current ~64%) instead of 80% to avoid immediately breaking CI
+
+#### 2. CI workflow (`.github/workflows/ci.yml`)
+- Moved shared Firebase env vars to a top-level `env:` block
+- Replaced `npm run test` with `npm run coverage` — thresholds enforced on every run
+- Added **Upload coverage report** step (`actions/upload-artifact@v4`, 14-day retention, runs on failure too)
+- Added **Security audit** step: `npm audit --audit-level=high`
+- Added **`deploy-preview`** job — runs on PRs, posts Vercel preview URL as PR comment
+- Added **`deploy-production`** job — runs on push to `main`, deploys `--prod`
+
+### Required GitHub Secrets (Settings → Secrets → Actions)
+
+| Secret | Source |
+|--------|--------|
+| `VERCEL_TOKEN` | Vercel dashboard → Account Settings → Tokens |
+| `VERCEL_ORG_ID` | `orgId` in `.vercel/project.json` (after `vercel link`) |
+| `VERCEL_PROJECT_ID` | `projectId` in `.vercel/project.json` (after `vercel link`) |
+
+### How to verify
+1. Open a PR → CI runs coverage+thresholds, audit, build, then posts a preview URL comment
+2. Merge to `main` → CI passes, production deploy fires
+3. Coverage HTML report appears in GitHub Actions Artifacts
