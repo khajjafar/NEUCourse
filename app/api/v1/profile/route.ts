@@ -82,7 +82,7 @@ export async function PATCH(request: Request) {
         const body = await request.json();
         const { requirements } = body;
 
-        const updateData: any = {};
+        const updateData: Record<string, unknown> = {};
         if (requirements !== undefined) {
             if (!Array.isArray(requirements)) {
                 return errorResponse('Requirements must be an array', 'INVALID_INPUT', 400);

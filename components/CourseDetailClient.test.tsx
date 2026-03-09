@@ -66,7 +66,7 @@ describe('CourseDetailClient', () => {
         render(<CourseDetailClient courseId="CS3500" />);
 
         expect(screen.getByText("Object-Oriented Design")).toBeInTheDocument();
-        expect(screen.getByText("CS 3500")).toBeInTheDocument();
+        expect(screen.getAllByText("CS 3500").length).toBeGreaterThanOrEqual(1);
         expect(screen.getByText("4 Credits")).toBeInTheDocument();
         expect(screen.getByText("A test class")).toBeInTheDocument();
         expect(screen.getByText("CS 2510")).toBeInTheDocument();

@@ -50,7 +50,7 @@ function SemesterCreditPill({ courses }: { courses: (string | CourseAssignment)[
                     setCredits(total);
                     setLoading(false);
                 }
-            } catch (error) {
+            } catch {
                 if (mounted) setLoading(false);
             }
         };
@@ -99,6 +99,7 @@ export default function PlanDetailsPage() {
     const [isBrowser, setIsBrowser] = useState(false);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsBrowser(true);
     }, []);
 

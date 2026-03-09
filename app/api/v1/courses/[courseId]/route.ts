@@ -48,7 +48,7 @@ export async function GET(
 
         return NextResponse.json({ data: courseDoc.data() }, { status: 200 });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error(`API /courses/[courseId] error:`, error);
         return NextResponse.json({
             error: { code: "SERVER_ERROR", message: "Failed to fetch course details." }

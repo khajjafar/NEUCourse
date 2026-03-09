@@ -22,8 +22,16 @@ import { adminDb } from "@/lib/firebase-admin";
  *       200:
  *         description: List of matched courses
  */
+interface CourseData {
+    id?: string;
+    subject?: string;
+    number?: string | number;
+    name?: string;
+    [key: string]: unknown;
+}
+
 // Module-level cache to prevent re-fetching all 2800+ courses from Firestore on every keystroke
-let cachedCourses: any[] | null = null;
+let cachedCourses: CourseData[] | null = null;
 let lastCacheTime = 0;
 const CACHE_TTL = 1000 * 60 * 60; // 1 hour
 
@@ -48,7 +56,7 @@ export async function GET(request: NextRequest) {
             console.log(`[Cache Miss] Fetched ${cachedCourses.length} courses from Firestore.`);
         }
 
-        const courses: any[] = [];
+        const courses: CourseData[] = [];
 
         for (const data of cachedCourses!) {
             let matchesSubject = true;
@@ -58,7 +66,7 @@ export async function GET(request: NextRequest) {
 
             let matchesLevel = true;
             if (minLevelStr || maxLevelStr) {
-                const num = parseInt(data.number, 10);
+                const num = parseInt(String(data.number ?? ''), 10);
                 if (!isNaN(num)) {
                     if (minLevelStr) {
                         const minLevel = parseInt(minLevelStr, 10);
@@ -112,7 +120,7 @@ export async function GET(request: NextRequest) {
         // Return up to 50 results directly from memory cache
         return NextResponse.json({ data: courses }, { status: 200 });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("API /courses error:", error);
         return NextResponse.json({
             error: { code: "SERVER_ERROR", message: "Failed to fetch course data." }

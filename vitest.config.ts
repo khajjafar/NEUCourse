@@ -23,7 +23,13 @@ export default defineConfig({
                 '**/*.config.*',
                 'app/layout.tsx',
                 '**/*.css',
-            ]
+            ],
+            thresholds: {
+                statements: 80,
+                functions: 80,
+                lines: 80,
+                branches: 60,
+            },
         }
     },
     resolve: {
