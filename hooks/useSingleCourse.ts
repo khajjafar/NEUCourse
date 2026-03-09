@@ -61,9 +61,9 @@ export function useSingleCourse(courseId: string | null) {
                 if (mounted) {
                     setCourse(data);
                 }
-            } catch (err: any) {
+            } catch (err: unknown) {
                 if (mounted) {
-                    setError(err.message || "An unknown error occurred.");
+                    setError(err instanceof Error ? err.message : "An unknown error occurred.");
                     setCourse(null);
                 }
             } finally {

@@ -63,7 +63,7 @@ export async function DELETE(
         const currentCourses = semesterDoc.data()?.courses || [];
 
         // Filter out the specific courseId, resolving both old format strings and new format objects safely
-        const updatedCourses = currentCourses.filter((courseItem: any) => {
+        const updatedCourses = currentCourses.filter((courseItem: string | { courseId: string; crn?: string }) => {
             if (typeof courseItem === 'string') {
                 return courseItem !== courseId.trim();
             } else if (typeof courseItem === 'object' && courseItem !== null) {
@@ -85,9 +85,9 @@ export async function DELETE(
             .update({ updatedAt: FieldValue.serverTimestamp() });
 
         return successResponse({ removed: true, courseId: courseId.trim() });
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error('Error removing course from semester:', err);
-        if (err.code === 5) { // GRPC NOT_FOUND equivalent in Firestore update()
+        if ((err as { code?: number }).code === 5) { // GRPC NOT_FOUND equivalent in Firestore update()
             return errorResponse('Target Plan or Semester does not exist', 'NOT_FOUND', 404);
         }
         return errorResponse('Failed to remove course', 'INTERNAL_SERVER_ERROR', 500);

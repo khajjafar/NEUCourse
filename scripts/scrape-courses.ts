@@ -274,7 +274,7 @@ async function scrapeSearchNeu(limit: number = 0): Promise<Course[]> {
 
                                         meetingGroups.forEach(group => {
                                             const spans = group.querySelectorAll('span.flex.items-center.gap-1');
-                                            let activeDays: string[] = [];
+                                            const activeDays: string[] = [];
                                             let timeString = '';
 
                                             if (spans.length >= 2) {
@@ -312,7 +312,7 @@ async function scrapeSearchNeu(limit: number = 0): Promise<Course[]> {
 
                                     // Fallback to simple DOM parsing if layout is simpler
                                     const daysSpan = td.querySelector('span.flex.items-center.gap-1');
-                                    let activeDays: string[] = [];
+                                    const activeDays: string[] = [];
 
                                     if (daysSpan) {
                                         Array.from(daysSpan.children).forEach((child, index) => {
@@ -415,7 +415,7 @@ async function run() {
         limit = parseInt(args[limitArg + 1], 10);
     }
 
-    let courses = await scrapeSearchNeu(limit);
+    const courses = await scrapeSearchNeu(limit);
 
     await uploadCoursesToFirestore(courses);
     console.log('--- Finished Course Scraper ---');

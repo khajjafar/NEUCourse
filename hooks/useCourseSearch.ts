@@ -54,8 +54,8 @@ export function useCourseSearch() {
                 }
 
                 setCourses(json.data || []);
-            } catch (err: any) {
-                setError(err.message || "An unknown error occurred.");
+            } catch (err: unknown) {
+                setError(err instanceof Error ? err.message : "An unknown error occurred.");
                 setCourses([]);
             } finally {
                 setLoading(false);

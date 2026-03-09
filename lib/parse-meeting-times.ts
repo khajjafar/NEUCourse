@@ -15,7 +15,7 @@ function convertTime12to24(time12h: string): string {
     const match = cleaned.match(/^(\d{1,2}):(\d{2})(am|pm)$/);
     if (!match) return time12h;
 
-    let [_, hoursStr, minutes, modifier] = match;
+    const [, hoursStr, minutes, modifier] = match;
     let hours = parseInt(hoursStr, 10);
 
     if (hours === 12) {

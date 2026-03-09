@@ -25,10 +25,15 @@ export default function GraduationRequirementsModal({
 
     useEffect(() => {
         if (isOpen) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setLocalReqs(requirements ? [...requirements] : []);
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setNewName('');
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setNewCount('');
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setError(null);
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsSaving(false);
         }
     }, [isOpen, requirements]);
