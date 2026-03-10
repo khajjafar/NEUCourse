@@ -243,6 +243,305 @@ describe('usePlanDetails Hook', () => {
         expect(result.current.plan?.semesters[1].courses).toEqual(['CS2000']);
     });
 
+    it('should set error when fetchPlanDetails response is not ok', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
+        } as any);
+
+        mockFetch.mockResolvedValueOnce({
+            ok: false,
+            json: async () => ({ error: { message: 'Plan not found' } })
+        });
+
+        const { result } = renderHook(() => usePlanDetails('p1'));
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        expect(result.current.error).toBe('Plan not found');
+        expect(result.current.plan).toBeNull();
+    });
+
+    it('addSemester throws when response is not ok', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
+        } as any);
+
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: { id: 'p1', semesters: [] } }) });
+
+        const { result } = renderHook(() => usePlanDetails('p1'));
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        mockFetch.mockResolvedValueOnce({ ok: false, json: async () => ({ error: { message: 'Semester failed' } }) });
+
+        await expect(
+            act(async () => { await result.current.addSemester('Fail', 0); })
+        ).rejects.toThrow('Semester failed');
+    });
+
+    it('addCourseToSemester throws and reverts when response is not ok', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
+        } as any);
+
+        const initialMock = { id: 'p1', name: 'Plan', semesters: [{ id: 'sem1', name: 'Fall', courses: [] }] };
+
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+
+        const { result } = renderHook(() => usePlanDetails('p1'));
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        // Fail the POST, then refetch (revert) returns original
+        mockFetch
+            .mockResolvedValueOnce({ ok: false, json: async () => ({ error: { message: 'Add course failed' } }) })
+            .mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+
+        await expect(
+            act(async () => { await result.current.addCourseToSemester('sem1', 'CS3500'); })
+        ).rejects.toThrow('Add course failed');
+    });
+
+    it('addCourseToSemester adds course with CRN', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
+        } as any);
+
+        const initialMock = { id: 'p1', name: 'Plan', semesters: [{ id: 'sem1', name: 'Fall', courses: [] }] };
+
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+
+        const { result } = renderHook(() => usePlanDetails('p1'));
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        mockFetch
+            .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { added: true } }) })
+            .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { ...initialMock, semesters: [{ id: 'sem1', name: 'Fall', courses: [{ courseId: 'CS3500', crn: '12345' }] }] } }) });
+
+        await act(async () => {
+            await result.current.addCourseToSemester('sem1', 'CS3500', '12345');
+        });
+
+        expect(mockFetch).toHaveBeenCalledWith('/api/v1/plans/p1/semesters/sem1/courses', expect.objectContaining({
+            body: JSON.stringify({ courseId: 'CS3500', crn: '12345' })
+        }));
+    });
+
+    it('removeCourseFromSemester throws and reverts when response is not ok', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
+        } as any);
+
+        const initialMock = { id: 'p1', name: 'Plan', semesters: [{ id: 'sem1', name: 'Fall', courses: ['CS3500'] }] };
+
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+
+        const { result } = renderHook(() => usePlanDetails('p1'));
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        mockFetch
+            .mockResolvedValueOnce({ ok: false, json: async () => ({ error: { message: 'Remove failed' } }) })
+            .mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+
+        await expect(
+            act(async () => { await result.current.removeCourseFromSemester('sem1', 'CS3500'); })
+        ).rejects.toThrow('Remove failed');
+    });
+
+    it('deleteSemester throws and reverts when response is not ok', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
+        } as any);
+
+        const initialMock = {
+            id: 'p1', name: 'Plan', semesters: [
+                { id: 'sem1', name: 'Fall', courses: [] },
+                { id: 'sem2', name: 'Spring', courses: [] }
+            ]
+        };
+
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+        const { result } = renderHook(() => usePlanDetails('p1'));
+        await waitFor(() => expect(result.current.plan?.semesters).toHaveLength(2));
+
+        mockFetch.mockResolvedValueOnce({ ok: false, json: async () => ({ error: { message: 'Delete sem failed' } }) });
+
+        await expect(
+            act(async () => { await result.current.deleteSemester('sem1'); })
+        ).rejects.toThrow('Delete sem failed');
+    });
+
+    it('reorderSemesters does nothing when sourceIndex equals destinationIndex', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
+        } as any);
+
+        const initialMock = {
+            id: 'p1', name: 'Plan', semesters: [
+                { id: 'sem1', name: 'Fall', order: 1, courses: [] },
+                { id: 'sem2', name: 'Spring', order: 2, courses: [] }
+            ]
+        };
+
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+        const { result } = renderHook(() => usePlanDetails('p1'));
+        await waitFor(() => expect(result.current.plan?.semesters).toHaveLength(2));
+
+        await act(async () => {
+            // sem1 is at index 0, moving to index 0 = no-op
+            await result.current.reorderSemesters('sem1', 0);
+        });
+
+        // No PATCH calls should have happened
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('reorderSemesters does nothing when semester not found', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
+        } as any);
+
+        const initialMock = {
+            id: 'p1', name: 'Plan', semesters: [{ id: 'sem1', name: 'Fall', order: 1, courses: [] }]
+        };
+
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+        const { result } = renderHook(() => usePlanDetails('p1'));
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        await act(async () => {
+            await result.current.reorderSemesters('non-existent', 0);
+        });
+
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('moveCourseBetweenSemesters within same semester updates correctly', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
+        } as any);
+
+        const initialMock = {
+            id: 'p1', name: 'Plan', semesters: [
+                { id: 'sem1', name: 'Fall', order: 1, courses: ['CS1000', 'CS2000', 'CS3000'] }
+            ]
+        };
+
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+        const { result } = renderHook(() => usePlanDetails('p1'));
+        await waitFor(() => expect(result.current.plan?.semesters).toHaveLength(1));
+
+        mockFetch.mockResolvedValue({ ok: true, json: async () => ({ data: { updated: true } }) });
+
+        await act(async () => {
+            // Move CS2000 (index 1) to index 0 within sem1
+            await result.current.moveCourseBetweenSemesters('sem1', 'sem1', 1, 0);
+        });
+
+        // Only one PATCH (same semester)
+        const patchCalls = mockFetch.mock.calls.filter((c: any[]) => c[1]?.method === 'PATCH');
+        expect(patchCalls).toHaveLength(1);
+    });
+
+    it('updateCourseAssignment returns early if semester not found', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
+        } as any);
+
+        const initialMock = { id: 'p1', name: 'Plan', semesters: [{ id: 'sem1', name: 'Fall', courses: [] }] };
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+        const { result } = renderHook(() => usePlanDetails('p1'));
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        // Call with non-existent semId
+        await act(async () => {
+            await result.current.updateCourseAssignment('nonexistent-sem', 'CS3500', { requirementId: 'req1' });
+        });
+
+        // No PATCH call should have happened
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('updateCourseAssignment throws when response is not ok', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
+        } as any);
+
+        const initialMock = {
+            id: 'p1', name: 'Plan', semesters: [
+                { id: 'sem1', name: 'Fall', courses: [{ courseId: 'CS3500' }] }
+            ]
+        };
+
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+        const { result } = renderHook(() => usePlanDetails('p1'));
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        mockFetch
+            .mockResolvedValueOnce({ ok: false, json: async () => ({ error: { message: 'Update assignment failed' } }) })
+            .mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+
+        await expect(
+            act(async () => { await result.current.updateCourseAssignment('sem1', 'CS3500', { requirementId: 'req1' }); })
+        ).rejects.toThrow('Update assignment failed');
+    });
+
+    it('reorderSemesters refetches plan when fetch fails (catch block)', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
+        } as any);
+
+        const initialMock = {
+            id: 'p1', name: 'Plan', semesters: [
+                { id: 'sem1', name: 'Fall', order: 1, courses: [] },
+                { id: 'sem2', name: 'Spring', order: 2, courses: [] }
+            ]
+        };
+
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+        const { result } = renderHook(() => usePlanDetails('p1'));
+        await waitFor(() => expect(result.current.plan?.semesters).toHaveLength(2));
+
+        // Make PATCH fail to trigger catch block, then refetch succeeds
+        mockFetch
+            .mockRejectedValueOnce(new Error('PATCH failed'))
+            .mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+
+        await act(async () => {
+            await result.current.reorderSemesters('sem1', 1);
+        });
+
+        // After catch, plan is refetched (1 initial + 2 PATCHes + 1 refetch = 4)
+        expect(mockFetch).toHaveBeenCalledTimes(4);
+    });
+
+    it('moveCourseBetweenSemesters refetches when fetch fails (catch block)', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
+        } as any);
+
+        const initialMock = {
+            id: 'p1', name: 'Plan', semesters: [
+                { id: 'sem1', name: 'Fall', order: 1, courses: ['CS1000', 'CS2000'] },
+                { id: 'sem2', name: 'Spring', order: 2, courses: [] }
+            ]
+        };
+
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+        const { result } = renderHook(() => usePlanDetails('p1'));
+        await waitFor(() => expect(result.current.plan?.semesters).toHaveLength(2));
+
+        // Fail the PATCH, then refetch succeeds
+        mockFetch
+            .mockRejectedValueOnce(new Error('Network failed'))
+            .mockRejectedValueOnce(new Error('Network failed'))
+            .mockResolvedValueOnce({ ok: true, json: async () => ({ data: initialMock }) });
+
+        await act(async () => {
+            await result.current.moveCourseBetweenSemesters('sem1', 'sem2', 0, 0);
+        });
+
+        // fetchPlanDetails was called on catch
+        expect(mockFetch).toHaveBeenCalledTimes(4);
+    });
+
     it('should update a course assignment optimistically', async () => {
         vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
             user: { uid: 'u1', getIdToken: mockGetIdToken }, loading: false, error: null
