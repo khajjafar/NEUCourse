@@ -78,4 +78,63 @@ describe('useSingleCourse', () => {
             expect(result.current.course).toBeNull();
         });
     });
+
+    it('returns cached course without fetching (cache hit)', async () => {
+        const mockCourse = { id: 'CS2500', name: 'Fundamentals' } as any;
+        courseCache.set('CS2500', mockCourse);
+
+        const { result } = renderHook(() => useSingleCourse('CS2500'));
+
+        await waitFor(() => {
+            expect(result.current.course).toEqual(mockCourse);
+            expect(result.current.loading).toBe(false);
+        });
+
+        expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    it('deduplicates in-flight requests for the same courseId', async () => {
+        const mockCourse = { id: 'CS3800', name: 'Theory of Computation' } as any;
+
+        (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+            ok: true,
+            json: async () => ({ data: mockCourse }),
+        });
+
+        const { result: r1 } = renderHook(() => useSingleCourse('CS3800'));
+        const { result: r2 } = renderHook(() => useSingleCourse('CS3800'));
+
+        await waitFor(() => {
+            expect(r1.current.course).toEqual(mockCourse);
+            expect(r2.current.course).toEqual(mockCourse);
+        });
+
+        // Only one fetch should have happened despite two hooks
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('handles non-404 server error (5xx)', async () => {
+        (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+            ok: false,
+            status: 500,
+        });
+
+        const { result } = renderHook(() => useSingleCourse('CS4410'));
+
+        await waitFor(() => {
+            expect(result.current.error).toBe('Failed to fetch course data.');
+            expect(result.current.loading).toBe(false);
+        });
+    });
+
+    it('handles error when thrown value is not an Error instance', async () => {
+        (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce('network failure string');
+
+        const { result } = renderHook(() => useSingleCourse('CS4500'));
+
+        await waitFor(() => {
+            expect(result.current.error).toBe('An unknown error occurred.');
+            expect(result.current.loading).toBe(false);
+        });
+    });
 });

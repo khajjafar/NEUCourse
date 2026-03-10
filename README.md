@@ -140,7 +140,7 @@ GitHub Actions runs on every push and pull request:
 
 1. **Lint** — ESLint
 2. **Build** — `next build`
-3. **Test + Coverage** — Vitest with thresholds (statements/functions/lines ≥ 80%, branches ≥ 60%)
+3. **Test + Coverage** — Vitest with thresholds (statements/functions/lines/branches ≥ 80%)
 4. **Security Audit** — `npm audit --audit-level=high`
 5. **Deploy Preview** — Vercel preview URL posted as PR comment (requires `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` secrets)
 6. **Deploy Production** — Vercel production deploy on push to `main`

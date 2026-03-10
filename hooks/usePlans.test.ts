@@ -162,4 +162,183 @@ describe('usePlans Hook', () => {
 
         expect(result.current.plans).toHaveLength(0);
     });
+
+    it('deletePlan throws when response is not ok', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'user123', getIdToken: mockGetIdToken },
+            loading: false,
+            error: null
+        } as any);
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({ data: [{ id: 'plan1', name: 'Plan' }] })
+        });
+
+        const { result } = renderHook(() => usePlans());
+        await waitFor(() => expect(result.current.plans).toHaveLength(1));
+
+        mockFetch.mockResolvedValueOnce({
+            ok: false,
+            json: async () => ({ error: { message: 'Delete failed' } })
+        });
+
+        await expect(
+            act(async () => { await result.current.deletePlan('plan1'); })
+        ).rejects.toThrow('Delete failed');
+    });
+
+    it('createPlan throws when user is null', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: null,
+            loading: false,
+            error: null
+        } as any);
+
+        const { result } = renderHook(() => usePlans());
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        await expect(result.current.createPlan('New Plan')).rejects.toThrow('Must be logged in');
+    });
+
+    it('deletePlan throws when user is null', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: null,
+            loading: false,
+            error: null
+        } as any);
+
+        const { result } = renderHook(() => usePlans());
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        await expect(result.current.deletePlan('plan1')).rejects.toThrow('Must be logged in');
+    });
+
+    it('renamePlan successfully updates plan name', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'user123', getIdToken: mockGetIdToken },
+            loading: false,
+            error: null
+        } as any);
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({ data: [{ id: 'plan1', name: 'Old Name' }] })
+        });
+
+        const { result } = renderHook(() => usePlans());
+        await waitFor(() => expect(result.current.plans).toHaveLength(1));
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({ data: { id: 'plan1', name: 'New Name' } })
+        });
+
+        await act(async () => {
+            await result.current.renamePlan('plan1', 'New Name');
+        });
+
+        expect(mockFetch).toHaveBeenCalledWith('/api/v1/plans/plan1', expect.objectContaining({
+            method: 'PUT',
+            body: JSON.stringify({ name: 'New Name' })
+        }));
+
+        expect(result.current.plans[0].name).toBe('New Name');
+    });
+
+    it('renamePlan throws when user is null', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: null,
+            loading: false,
+            error: null
+        } as any);
+
+        const { result } = renderHook(() => usePlans());
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        await expect(result.current.renamePlan('plan1', 'New')).rejects.toThrow('Must be logged in');
+    });
+
+    it('renamePlan throws when response is not ok', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'user123', getIdToken: mockGetIdToken },
+            loading: false,
+            error: null
+        } as any);
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({ data: [{ id: 'plan1', name: 'Plan' }] })
+        });
+
+        const { result } = renderHook(() => usePlans());
+        await waitFor(() => expect(result.current.plans).toHaveLength(1));
+
+        mockFetch.mockResolvedValueOnce({
+            ok: false,
+            json: async () => ({ error: { message: 'Rename failed' } })
+        });
+
+        await expect(
+            act(async () => { await result.current.renamePlan('plan1', 'New'); })
+        ).rejects.toThrow('Rename failed');
+    });
+
+    it('fetchPlans sets empty plans when data.data is null', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'user123', getIdToken: mockGetIdToken },
+            loading: false,
+            error: null
+        } as any);
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({ data: null })
+        });
+
+        const { result } = renderHook(() => usePlans());
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        expect(result.current.plans).toEqual([]);
+    });
+
+    it('fetchPlans sets unknown error when thrown value is not an Error', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'user123', getIdToken: mockGetIdToken },
+            loading: false,
+            error: null
+        } as any);
+
+        mockFetch.mockRejectedValueOnce('network failure string');
+
+        const { result } = renderHook(() => usePlans());
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        expect(result.current.error).toBe('Unknown error');
+    });
+
+    it('createPlan throws when response is not ok', async () => {
+        vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+            user: { uid: 'user123', getIdToken: mockGetIdToken },
+            loading: false,
+            error: null
+        } as any);
+
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({ data: [] })
+        });
+
+        const { result } = renderHook(() => usePlans());
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        mockFetch.mockResolvedValueOnce({
+            ok: false,
+            json: async () => ({ error: { message: 'Create failed' } })
+        });
+
+        await expect(
+            act(async () => { await result.current.createPlan('Bad Plan'); })
+        ).rejects.toThrow('Create failed');
+    });
 });
