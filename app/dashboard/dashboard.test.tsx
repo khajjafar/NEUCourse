@@ -115,4 +115,80 @@ describe('DashboardPage', () => {
         // Should show the event that is 2 days from now
         expect(screen.getByText('Next Week Event')).toBeInTheDocument();
     });
+
+    it('renders events with red and green colors', () => {
+        const now = new Date();
+        const soonEvent = addDays(now, 2);
+
+        const mockEvents = [
+            { id: '1', title: 'Red Event', startTime: soonEvent.toISOString(), endTime: soonEvent.toISOString(), color: 'red' },
+            { id: '2', title: 'Green Event', startTime: addDays(now, 3).toISOString(), endTime: addDays(now, 3).toISOString(), color: 'green' },
+        ];
+
+        mockUsePlans.mockReturnValue({ plans: [], loading: false, error: null, createPlan: vi.fn(), deletePlan: vi.fn(), renamePlan: vi.fn() as any });
+        mockUseEvents.mockReturnValue({ events: mockEvents, loading: false, error: null, addEvent: vi.fn() as any, updateEvent: vi.fn() as any, deleteEvent: vi.fn(), refreshEvents: vi.fn() });
+
+        render(<DashboardPage />);
+        expect(screen.getByText('Red Event')).toBeInTheDocument();
+        expect(screen.getByText('Green Event')).toBeInTheDocument();
+    });
+
+    it('handles plans with toDate() timestamp format', () => {
+        const now = new Date();
+        const updatedDate = subDays(now, 1);
+
+        const mockPlans = [
+            { id: '1', name: 'Plan with toDate', semesterCount: 2, updatedAt: { toDate: () => updatedDate } },
+        ];
+
+        mockUsePlans.mockReturnValue({ plans: mockPlans, loading: false, error: null, createPlan: vi.fn(), deletePlan: vi.fn(), renamePlan: vi.fn() as any });
+        mockUseEvents.mockReturnValue({ events: [], loading: false, error: null, addEvent: vi.fn() as any, updateEvent: vi.fn() as any, deleteEvent: vi.fn(), refreshEvents: vi.fn() });
+
+        render(<DashboardPage />);
+        expect(screen.getByText('Plan with toDate')).toBeInTheDocument();
+    });
+
+    it('handles plans with _seconds timestamp format', () => {
+        const now = new Date();
+        const updatedDate = subDays(now, 1);
+
+        const mockPlans = [
+            { id: '1', name: 'Plan with _seconds', semesterCount: 3, updatedAt: { _seconds: updatedDate.getTime() / 1000 } },
+        ];
+
+        mockUsePlans.mockReturnValue({ plans: mockPlans, loading: false, error: null, createPlan: vi.fn(), deletePlan: vi.fn(), renamePlan: vi.fn() as any });
+        mockUseEvents.mockReturnValue({ events: [], loading: false, error: null, addEvent: vi.fn() as any, updateEvent: vi.fn() as any, deleteEvent: vi.fn(), refreshEvents: vi.fn() });
+
+        render(<DashboardPage />);
+        expect(screen.getByText('Plan with _seconds')).toBeInTheDocument();
+    });
+
+    it('handles plans with string and number timestamp formats', () => {
+        const now = new Date();
+        const updatedDate = subDays(now, 1);
+
+        const mockPlans = [
+            { id: '1', name: 'String Timestamp Plan', semesterCount: 1, updatedAt: updatedDate.toISOString() },
+            { id: '2', name: 'Number Timestamp Plan', semesterCount: 2, updatedAt: updatedDate.getTime() },
+        ];
+
+        mockUsePlans.mockReturnValue({ plans: mockPlans, loading: false, error: null, createPlan: vi.fn(), deletePlan: vi.fn(), renamePlan: vi.fn() as any });
+        mockUseEvents.mockReturnValue({ events: [], loading: false, error: null, addEvent: vi.fn() as any, updateEvent: vi.fn() as any, deleteEvent: vi.fn(), refreshEvents: vi.fn() });
+
+        render(<DashboardPage />);
+        expect(screen.getByText('String Timestamp Plan')).toBeInTheDocument();
+        expect(screen.getByText('Number Timestamp Plan')).toBeInTheDocument();
+    });
+
+    it('handles plans with null timestamp gracefully', () => {
+        const mockPlans = [
+            { id: '1', name: 'No Timestamp Plan', semesterCount: 0, updatedAt: null, createdAt: null },
+        ];
+
+        mockUsePlans.mockReturnValue({ plans: mockPlans, loading: false, error: null, createPlan: vi.fn(), deletePlan: vi.fn(), renamePlan: vi.fn() as any });
+        mockUseEvents.mockReturnValue({ events: [], loading: false, error: null, addEvent: vi.fn() as any, updateEvent: vi.fn() as any, deleteEvent: vi.fn(), refreshEvents: vi.fn() });
+
+        render(<DashboardPage />);
+        expect(screen.getByText('No Timestamp Plan')).toBeInTheDocument();
+    });
 });
