@@ -3,6 +3,8 @@ import { adminDb } from '@/lib/firebase-admin';
 import { verifyAuth, errorResponse, successResponse } from '@/lib/api-helpers';
 import { FieldValue } from 'firebase-admin/firestore';
 
+/** @fileoverview PATCH and DELETE /api/v1/plans/[planId]/semesters/[semId] — Authenticated endpoints for updating or deleting a semester. */
+
 /**
  * @swagger
  * /api/v1/plans/{planId}/semesters/{semId}:
@@ -21,6 +23,13 @@ import { FieldValue } from 'firebase-admin/firestore';
  *     summary: Update semester attributes directly (order, name, array of courses) usually via drag and drop contexts
  *     security:
  *       - bearerAuth: []
+ */
+/**
+ * Deletes the specified semester document.
+ *
+ * @param request - Incoming Next.js Request object
+ * @param context - Route context with params (planId, semId)
+ * @returns NextResponse — 200 on success, 401 if unauthenticated, 500 on error
  */
 export async function DELETE(
     request: NextRequest,
@@ -56,6 +65,13 @@ export async function DELETE(
     }
 }
 
+/**
+ * Partially updates a semester (name, order, or courses array). At least one field must be provided.
+ *
+ * @param request - Incoming Next.js Request object
+ * @param context - Route context with params (planId, semId)
+ * @returns NextResponse — 200 on success, 400 if no update data provided, 401 if unauthenticated, 404 if plan or semester not found, 500 on error
+ */
 export async function PATCH(
     request: NextRequest,
     context: { params: Promise<{ planId: string, semId: string }> }

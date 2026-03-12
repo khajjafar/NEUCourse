@@ -3,6 +3,8 @@ import { adminDb } from '@/lib/firebase-admin';
 import { verifyAuth, successResponse, errorResponse } from '@/lib/api-helpers';
 import { FieldValue } from 'firebase-admin/firestore';
 
+/** @fileoverview PUT and DELETE /api/v1/events/[eventId] — Authenticated endpoints for updating and deleting a specific calendar event. */
+
 /**
  * @swagger
  * /api/v1/events/{eventId}:
@@ -21,6 +23,13 @@ import { FieldValue } from 'firebase-admin/firestore';
  *         description: Event deleted successfully
  *       404:
  *         description: Event not found
+ */
+/**
+ * Deletes the specified calendar event.
+ *
+ * @param request - Incoming Next.js Request object
+ * @param params - Destructured route params containing eventId
+ * @returns NextResponse — 200 on success, 401 if unauthenticated, 404 if event not found, 500 on error
  */
 export async function DELETE(
     request: Request,
@@ -74,6 +83,13 @@ export async function DELETE(
  *         description: Missing required fields
  *       404:
  *         description: Event not found
+ */
+/**
+ * Updates all fields of a calendar event. Requires { title, startTime, endTime } (location and color optional).
+ *
+ * @param request - Incoming Next.js Request object
+ * @param params - Destructured route params containing eventId
+ * @returns NextResponse — 200 on success, 400 if required fields are missing, 401 if unauthenticated, 404 if event not found, 500 on error
  */
 export async function PUT(
     request: Request,

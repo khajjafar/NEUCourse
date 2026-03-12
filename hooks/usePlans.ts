@@ -1,12 +1,22 @@
+/**
+ * @fileoverview Hook for managing the authenticated user's degree plans.
+ *
+ * Fetches the plan list from GET /api/v1/plans on mount and provides
+ * createPlan, deletePlan, and renamePlan. Delete uses an optimistic update
+ * (immediate local removal) while create refetches from the server.
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
+/** A single graduation requirement category (e.g. "Core CS", "Math", "Electives"). */
 export interface GraduationRequirement {
     id: string;
     name: string;
     count: number;
 }
 
+/** Metadata for a degree plan as returned by GET /api/v1/plans. */
 export interface Plan {
     id: string;
     name: string;
@@ -15,6 +25,11 @@ export interface Plan {
     semesterCount?: number;
 }
 
+/**
+ * Fetches and manages the authenticated user's degree plans.
+ *
+ * @returns plans array, loading/error state, createPlan, deletePlan, and renamePlan
+ */
 export function usePlans() {
     const { user, loading: authLoading } = useAuth();
     const [plans, setPlans] = useState<Plan[]>([]);

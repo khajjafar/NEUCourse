@@ -1,11 +1,25 @@
+/**
+ * @fileoverview Hook for reading and updating the authenticated user's profile.
+ *
+ * Fetches graduation requirements from GET /api/v1/profile and provides
+ * updateRequirements with optimistic UI: local state is updated immediately,
+ * then reverted if the PATCH request fails.
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { GraduationRequirement } from '@/hooks/usePlans';
 
+/** User profile data stored in Firestore under users/{userId}. */
 export interface UserProfile {
     requirements?: GraduationRequirement[];
 }
 
+/**
+ * Fetches and manages the authenticated user's profile, including graduation requirements.
+ *
+ * @returns profile data, loading/error state, and updateRequirements mutation
+ */
 export function useUserProfile() {
     const { user, loading: authLoading } = useAuth();
     const [profile, setProfile] = useState<UserProfile | null>(null);

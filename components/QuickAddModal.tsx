@@ -1,5 +1,11 @@
 'use client';
 
+/**
+ * @fileoverview Full-screen search modal for adding courses to a semester from the degree plan
+ * page. Integrates useCourseSearch for debounced search and inline section selection before
+ * adding.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useCourseSearch, CourseData } from '@/hooks/useCourseSearch';
 import { useSingleCourse } from '@/hooks/useSingleCourse';
@@ -14,6 +20,17 @@ interface QuickAddModalProps {
     semesters: Array<{ id: string; name: string; order: number; courses: (string | { courseId: string; crn?: string })[] }>;
 }
 
+/**
+ * Renders a search modal where users can search for courses, expand a course to see its
+ * sections, and add a section to a semester.
+ * @param props - Component props
+ * @param props.planId - The ID of the current plan (passed down for context)
+ * @param props.isOpen - Whether the modal is visible
+ * @param props.onClose - Callback to dismiss the modal
+ * @param props.addCourseToSemester - Async mutation to add a course (with optional CRN) to a semester
+ * @param props.semesters - The plan's semesters to choose from when adding a course
+ * @returns The search modal, or null when closed
+ */
 export default function QuickAddModal({ planId, isOpen, onClose, addCourseToSemester, semesters }: QuickAddModalProps) {
     const { query, setQuery, courses, loading: searchLoading, error: searchError } = useCourseSearch();
     const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);

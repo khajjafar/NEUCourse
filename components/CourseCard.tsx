@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Clickable course card for the course search/browse page. Renders course subject,
+ * number, name, credit hours, prerequisites, and co-requisites. The entire card is a Next.js
+ * Link to the course detail page.
+ */
+
 import React from "react";
 import { CourseData } from "@/hooks/useCourseSearch";
 import Link from 'next/link';
@@ -6,6 +12,12 @@ interface CourseCardProps {
     course: CourseData;
 }
 
+/**
+ * Displays a course as a linked card with prereq/coreq badges.
+ * @param props - Component props
+ * @param props.course - The course data to display
+ * @returns A Next.js Link wrapping the course card UI
+ */
 export default function CourseCard({ course }: CourseCardProps) {
     return (
         <Link href={`/courses/${course.id}`} className="block group h-full">

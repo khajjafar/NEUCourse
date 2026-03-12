@@ -1,3 +1,13 @@
+/**
+ * @fileoverview Parses SearchNEU meeting time strings into structured day/time objects.
+ *
+ * SearchNEU uses en-dash (–) as the time range separator and supports multiple
+ * schedule segments separated by semicolons. This module normalizes those quirks
+ * before running regex matching.
+ *
+ * Used by AddToCalendarButton to create calendar events from course sections.
+ */
+
 const DAY_MAP: Record<string, string> = {
     M: 'Monday',
     T: 'Tuesday',
@@ -9,6 +19,13 @@ const DAY_MAP: Record<string, string> = {
     U: 'Sunday',
 };
 
+/**
+ * Converts a 12-hour time string (e.g. "1:35pm") to 24-hour format (e.g. "13:35").
+ * Handles optional spaces between digits and am/pm suffix.
+ *
+ * @param time12h - Time string in 12-hour format
+ * @returns 24-hour time string, or the original string if it cannot be parsed
+ */
 function convertTime12to24(time12h: string): string {
     // Remove spaces before am/pm
     const cleaned = time12h.replace(/\s+/g, '').toLowerCase();
@@ -28,12 +45,26 @@ function convertTime12to24(time12h: string): string {
     return `${hours24}:${minutes}`;
 }
 
+/** Structured representation of a single meeting time segment. */
 export interface ParsedMeetingTime {
+    /** Full day names, e.g. ["Monday", "Wednesday", "Friday"] */
     days: string[];
+    /** 24-hour start time, e.g. "10:30" */
     startTime: string;
+    /** 24-hour end time, e.g. "11:35" */
     endTime: string;
 }
 
+/**
+ * Parses a SearchNEU meeting time string into an array of structured segments.
+ *
+ * Handles: en-dash separators, multiple segments (semicolon-delimited),
+ * comma-separated days ("M,W,F"), tight day notation ("MWF"), and
+ * Thursday aliases ("Th" and "R").
+ *
+ * @param meetingTimeStr - Raw meeting time string from Firestore, e.g. "MWF 10:30am – 11:35am"
+ * @returns Array of parsed segments, or null if the string is TBA or unparseable
+ */
 export function parseMeetingTime(meetingTimeStr: string): ParsedMeetingTime[] | null {
     if (!meetingTimeStr || meetingTimeStr.trim().toUpperCase() === 'TBA') {
         return null;

@@ -1,5 +1,10 @@
 'use client';
 
+/**
+ * @fileoverview Progress bar visualization for graduation requirements in the degree plan view.
+ * Computes completion percentage by counting CourseAssignments that have a requirementId set.
+ */
+
 import React, { useMemo } from 'react';
 import { GraduationRequirement } from '@/hooks/usePlans';
 import { Semester } from '@/hooks/usePlanDetails';
@@ -9,6 +14,14 @@ interface RequirementProgressBarsProps {
     semesters?: Semester[];
 }
 
+/**
+ * Renders a grid of labeled progress bars showing how many courses have been assigned to each
+ * graduation requirement.
+ * @param props - Component props
+ * @param props.requirements - The graduation requirements to display progress for
+ * @param props.semesters - All semesters in the plan, used to count assigned courses per requirement
+ * @returns A grid of progress bars, or null if there are no requirements
+ */
 export default function RequirementProgressBars({ requirements, semesters }: RequirementProgressBarsProps) {
     const progressData = useMemo(() => {
         if (!requirements || requirements.length === 0) return [];

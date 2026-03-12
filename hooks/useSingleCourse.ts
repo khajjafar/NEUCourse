@@ -1,9 +1,27 @@
+/**
+ * @fileoverview Hook and utilities for fetching a single course by ID with caching.
+ *
+ * The module-level cache (courseCache) persists across renders to avoid
+ * redundant API calls. inFlightPromises deduplicates simultaneous requests
+ * for the same courseId — critical when multiple components mount concurrently.
+ */
+
 import { useState, useEffect } from "react";
 import { CourseData } from "./useCourseSearch";
 
+/** Module-level cache mapping courseId → CourseData to persist across renders. */
 export const courseCache = new Map<string, CourseData>();
+
+/** Tracks in-flight fetch promises to prevent duplicate concurrent requests. */
 export const inFlightPromises = new Map<string, Promise<CourseData>>();
 
+/**
+ * Fetches a course by ID, using the module-level cache and in-flight deduplication.
+ *
+ * @param courseId - The course identifier (e.g. "CS3500")
+ * @returns Resolved CourseData from cache or API
+ * @throws Error if the course is not found (404) or the API fails
+ */
 export async function fetchCourseCached(courseId: string): Promise<CourseData> {
     if (courseCache.has(courseId)) {
         return courseCache.get(courseId)!;
@@ -35,6 +53,13 @@ export async function fetchCourseCached(courseId: string): Promise<CourseData> {
     return promise;
 }
 
+/**
+ * React hook that fetches and returns a single course, using the module-level cache.
+ * Initializes synchronously from cache if available to avoid a loading flash.
+ *
+ * @param courseId - The course identifier, or null to skip fetching
+ * @returns course data (or null), loading boolean, and error string
+ */
 export function useSingleCourse(courseId: string | null) {
     const [course, setCourse] = useState<CourseData | null>(courseId ? courseCache.get(courseId) || null : null);
     const [loading, setLoading] = useState(courseId ? !courseCache.has(courseId) : false);

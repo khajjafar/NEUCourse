@@ -152,19 +152,27 @@ See [.github/workflows/ci.yml](.github/workflows/ci.yml).
 ## Project Structure
 
 ```
-/app
-  /api/v1/          — REST API route handlers (authenticated via Firebase JWT)
-  /dashboard/       — Dashboard page
-  /courses/         — Course search page
-  /plans/[planId]/  — Degree plan detail page
-  /calendar/        — Weekly calendar page
-  /api-docs/        — Swagger UI
+/app                         — Next.js App Router pages and API route handlers
+  /api/v1/                   — REST API endpoints (Firebase JWT auth on protected routes)
+    /courses/                — Public course search and single-course endpoints
+    /plans/                  — Degree plan CRUD; nested semesters and courses sub-routes
+    /events/                 — Calendar event CRUD for the authenticated user
+    /profile/                — User profile read/update (graduation requirements)
+    /swagger/                — Serves the OpenAPI JSON spec consumed by /api-docs
+  /dashboard/                — Student dashboard with plan overview and upcoming events
+  /courses/                  — Course search and browse page (public, no auth required)
+  /plans/[planId]/           — Degree plan detail with semester management and drag-drop
+  /calendar/                 — Weekly calendar with event CRUD and overlap detection
+  /api-docs/                 — Interactive Swagger UI for API exploration
+  /login/                    — Email/password login page
+  /register/                 — New account registration page
 
-/components         — React components (flat)
-/hooks              — Custom React hooks
-/lib                — Firebase init, API helpers (server-only utilities)
-/docs               — Project documentation and wireframes
-/scripts            — One-time data scraper (scrape-courses.js)
+/components                  — Reusable React client components (flat structure, PascalCase)
+/hooks                       — Custom React hooks for auth, data fetching, and state management
+/lib                         — Firebase SDK init (client + admin), API helpers, Swagger spec
+/docs                        — Project documentation, wireframes, and OpenAPI spec
+/scripts                     — One-time SearchNEU course catalog scraper (scrape-courses.js)
+/tests                       — Playwright E2E test specs
 ```
 
 ---

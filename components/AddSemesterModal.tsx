@@ -1,5 +1,10 @@
 'use client';
 
+/**
+ * @fileoverview Modal form for creating a new semester within a degree plan.
+ * Calls the addSemester mutation from usePlanDetails.
+ */
+
 import React, { useState, FormEvent, useEffect } from 'react';
 import { usePlanDetails } from '@/hooks/usePlanDetails';
 
@@ -11,6 +16,16 @@ interface AddSemesterModalProps {
     currentSemesterCount: number;
 }
 
+/**
+ * Controlled modal that prompts for a semester name and calls addSemester on submit.
+ * @param props - Component props
+ * @param props.planId - The ID of the plan to add the semester to
+ * @param props.isOpen - Whether the modal is visible
+ * @param props.onClose - Callback to dismiss the modal
+ * @param props.addSemester - Async mutation to create the new semester
+ * @param props.currentSemesterCount - Number of existing semesters, used to compute order
+ * @returns The modal dialog, or null when closed
+ */
 export default function AddSemesterModal({ planId, isOpen, onClose, addSemester, currentSemesterCount }: AddSemesterModalProps) {
     const [newSemesterName, setNewSemesterName] = useState('');
     const [isCreatingSem, setIsCreatingSem] = useState(false);

@@ -3,6 +3,8 @@ import { adminDb } from '@/lib/firebase-admin';
 import { verifyAuth, errorResponse, successResponse } from '@/lib/api-helpers';
 import { FieldValue } from 'firebase-admin/firestore';
 
+/** @fileoverview POST /api/v1/plans/[planId]/semesters — Authenticated endpoint for adding a semester to a degree plan. */
+
 /**
  * @swagger
  * /api/v1/plans/{planId}/semesters:
@@ -36,6 +38,13 @@ import { FieldValue } from 'firebase-admin/firestore';
  *         description: Missing required fields
  *       401:
  *         description: Unauthorized
+ */
+/**
+ * Creates a new semester in the specified plan. Requires { name: string, order: number } in the request body.
+ *
+ * @param request - Incoming Next.js Request object
+ * @param context - Route context with params (planId)
+ * @returns NextResponse — 201 on success, 400 if name is missing, 401 if unauthenticated, 500 on error
  */
 export async function POST(
     request: NextRequest,

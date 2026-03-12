@@ -22,6 +22,8 @@ import { adminDb } from "@/lib/firebase-admin";
  *       200:
  *         description: List of matched courses
  */
+/** @fileoverview GET /api/v1/courses — Public endpoint for searching pre-scraped NEU courses. Supports query (q), subject, minLevel, and maxLevel filters. Results are cached in-memory for 5 minutes. No authentication required. */
+
 interface CourseData {
     id?: string;
     subject?: string;
@@ -35,6 +37,12 @@ let cachedCourses: CourseData[] | null = null;
 let lastCacheTime = 0;
 const CACHE_TTL = 1000 * 60 * 60; // 1 hour
 
+/**
+ * Searches the Firestore courses collection with optional filters. Returns up to 50 matching courses.
+ *
+ * @param request - Incoming Next.js Request object (supports q, subject, minLevel, maxLevel query params)
+ * @returns NextResponse — 200 with array of courses, 500 on error
+ */
 export async function GET(request: NextRequest) {
     try {
         const searchParams = request.nextUrl.searchParams;

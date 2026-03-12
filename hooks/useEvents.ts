@@ -1,6 +1,15 @@
+/**
+ * @fileoverview Hook for managing the authenticated user's calendar events.
+ *
+ * Fetches events from GET /api/v1/events on mount and after mutations.
+ * Provides addEvent, updateEvent, and deleteEvent for CRUD operations,
+ * all of which include the Firebase JWT in the Authorization header.
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
 
+/** A single calendar event as stored in Firestore. */
 export interface EventItem {
     id: string;
     title: string;
@@ -10,6 +19,12 @@ export interface EventItem {
     color?: string;
 }
 
+/**
+ * Provides calendar event state and CRUD operations for the authenticated user.
+ *
+ * @returns events array, loading/error state, addEvent, updateEvent, deleteEvent,
+ *          and refreshEvents for manual refetch
+ */
 export function useEvents() {
     const { user, loading: authLoading } = useAuth();
     const [events, setEvents] = useState<EventItem[]>([]);

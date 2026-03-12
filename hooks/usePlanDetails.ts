@@ -1,13 +1,23 @@
+/**
+ * @fileoverview Hook for managing a single degree plan's full detail: semesters and courses.
+ *
+ * Fetches from GET /api/v1/plans/[planId] on mount. Provides semester CRUD,
+ * course add/remove, drag-drop reordering, and requirement assignment.
+ * Most mutations use optimistic UI updates with server-side revert on failure.
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Plan, GraduationRequirement } from './usePlans';
 
+/** A course placed in a semester, optionally with a specific section CRN and requirement mapping. */
 export interface CourseAssignment {
     courseId: string;
     crn?: string;
     requirementId?: string;
 }
 
+/** A single semester within a degree plan, containing an ordered list of courses. */
 export interface Semester {
     id: string;
     name: string;
@@ -15,10 +25,19 @@ export interface Semester {
     courses: (string | CourseAssignment)[]; // List of course IDs or objects
 }
 
+/** A degree plan with its full list of semesters populated. */
 export interface DetailedPlan extends Plan {
     semesters: Semester[];
 }
 
+/**
+ * Fetches and manages a single degree plan with its semesters and courses.
+ *
+ * @param planId - Firestore plan document ID, or null to skip fetching
+ * @returns plan (with semesters), loading/error state, and mutation functions:
+ *          addSemester, deleteSemester, reorderSemesters, moveCourseBetweenSemesters,
+ *          addCourseToSemester, removeCourseFromSemester, updateCourseAssignment
+ */
 export function usePlanDetails(planId: string | null) {
     const { user, loading: authLoading } = useAuth();
     const [plan, setPlan] = useState<DetailedPlan | null>(null);
