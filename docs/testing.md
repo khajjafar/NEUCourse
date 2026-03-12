@@ -15,14 +15,14 @@ NEUCourse uses three testing layers:
 
 **Why these tools?**
 - **Vitest** integrates natively with the Vite-based Next.js build toolchain, runs fast in watch mode, and provides first-class TypeScript support without extra configuration.
-- **React Testing Library** encourages testing user-visible behavior rather than implementation details — we test what users see and interact with, not internal state.
+- **React Testing Library** encourages testing user-visible behavior rather than implementation details - we test what users see and interact with, not internal state.
 - **Playwright** runs against the real Next.js dev server, giving confidence that pages render, routes resolve, and browser interactions work end-to-end.
 
 Coverage is enforced at **80% for all four metrics** (statements, branches, functions, lines) via `vitest.config.ts`. The CI build fails if any metric drops below this threshold.
 
 ---
 
-## 2. Quick Start — Run Tests Yourself
+## 2. Quick Start - Run Tests Yourself
 
 ```bash
 # Install dependencies
@@ -41,7 +41,7 @@ npm run coverage:open
 npm run test:e2e
 ```
 
-> **Note on E2E tests:** Playwright starts the Next.js dev server automatically (`npm run dev` on port 3000). Tests that require authenticated state use `test.skip()` unless `.env.test` is configured — see [Section 5](#5-end-to-end-tests-playwright) for details.
+> **Note on E2E tests:** Playwright starts the Next.js dev server automatically (`npm run dev` on port 3000). Tests that require authenticated state use `test.skip()` unless `.env.test` is configured - see [Section 5](#5-end-to-end-tests-playwright) for details.
 
 ---
 
@@ -121,13 +121,13 @@ Tests PUT (update event) and DELETE (remove event).
 - DELETE removes the event and returns 200
 
 #### `app/api/v1/courses/route.test.ts`
-Tests GET (search courses — public, no auth required).
+Tests GET (search courses - public, no auth required).
 - Accepts `q`, `subject`, `minLevel`, and `maxLevel` query parameters
 - Returns up to 50 matching courses from Firestore
 - Returns 500 on Firestore errors
 
 #### `app/api/v1/courses/[courseId]/route.test.ts`
-Tests GET (single course — public, no auth required).
+Tests GET (single course - public, no auth required).
 - Returns the full course document including sections
 - Returns 404 when the courseId does not exist
 - Returns 500 on Firestore errors
@@ -278,7 +278,7 @@ Tests the course search and browse page.
 
 4 spec files in the `tests/` directory, run against the Next.js dev server on `http://localhost:3000`.
 
-**Auth-required tests:** Tests that require a logged-in user use `test.skip()` unless `.env.test` is present with `TEST_USER_EMAIL` and `TEST_USER_PASSWORD`. This is intentional — the skip is not a broken test, it's a guard against running against a real Firebase project without credentials.
+**Auth-required tests:** Tests that require a logged-in user use `test.skip()` unless `.env.test` is present with `TEST_USER_EMAIL` and `TEST_USER_PASSWORD`. This is intentional - the skip is not a broken test, it's a guard against running against a real Firebase project without credentials.
 
 **Public-route tests:** Tests on public pages (login, register, courses) run headlessly without any credentials.
 
@@ -313,7 +313,7 @@ Tests page navigation and routing.
 
 ## 6. What We Tested and Why
 
-The test suite prioritizes API route handlers and custom hooks because that is where all the business logic lives. Route handlers own authentication enforcement (`verifyAuth()`), input validation, and Firestore operations — a bug here could expose or corrupt user data. Hooks own state management and data fetching — testing them ensures the UI has accurate data and that optimistic updates revert correctly on failure.
+The test suite prioritizes API route handlers and custom hooks because that is where all the business logic lives. Route handlers own authentication enforcement (`verifyAuth()`), input validation, and Firestore operations - a bug here could expose or corrupt user data. Hooks own state management and data fetching - testing them ensures the UI has accurate data and that optimistic updates revert correctly on failure.
 
 Mocking strategy: we use `vi.mock()` to mock the `firebase` and `firebase-admin` modules, replacing them with stubs that return predictable data. We mock `global.fetch` to simulate API responses without hitting the network. This means unit tests run in milliseconds and never touch real Firestore, making them safe to run anywhere. The `AuthProvider` wrapper in hook tests provides the `useAuth()` context without requiring a real Firebase auth session.
 
@@ -327,10 +327,10 @@ Tests run automatically on every push and pull request via **GitHub Actions** (`
 
 The pipeline runs these steps in order:
 
-1. **Lint** — ESLint with TypeScript rules
-2. **Coverage** — `npm run coverage` with Vitest threshold enforcement (fails if any metric < 80%)
-3. **Security audit** — `npm audit` (fails on high-severity vulnerabilities)
-4. **Build** — `npm run build` to catch TypeScript and build errors
+1. **Lint** - ESLint with TypeScript rules
+2. **Coverage** - `npm run coverage` with Vitest threshold enforcement (fails if any metric < 80%)
+3. **Security audit** - `npm audit` (fails on high-severity vulnerabilities)
+4. **Build** - `npm run build` to catch TypeScript and build errors
 
 Coverage artifacts (the HTML report) are uploaded to GitHub Actions artifacts on every run, so you can download and browse them without running locally.
 
