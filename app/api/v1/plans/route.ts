@@ -5,6 +5,8 @@ import { FieldValue } from 'firebase-admin/firestore';
 
 export const dynamic = 'force-dynamic';
 
+/** @fileoverview GET and POST /api/v1/plans — Authenticated endpoints for listing and creating the user's degree plans. verifyAuth() must succeed before any Firestore operation. */
+
 /**
  * @swagger
  * /api/v1/plans:
@@ -17,6 +19,12 @@ export const dynamic = 'force-dynamic';
  *         description: List of user's degree plans
  *       401:
  *         description: Unauthorized
+ */
+/**
+ * Lists all degree plans for the authenticated user, each with a semesterCount from its subcollection.
+ *
+ * @param request - Incoming Next.js Request object
+ * @returns NextResponse — 200 with plans array on success, 401 if unauthenticated, 500 on error
  */
 export async function GET(request: Request) {
     const { user, error } = await verifyAuth(request);
@@ -78,6 +86,12 @@ export async function GET(request: Request) {
  *         description: Missing required fields
  *       401:
  *         description: Unauthorized
+ */
+/**
+ * Creates a new degree plan for the authenticated user. Requires { name: string } in the request body.
+ *
+ * @param request - Incoming Next.js Request object
+ * @returns NextResponse — 201 on success, 400 if name is missing or invalid, 401 if unauthenticated, 500 on error
  */
 export async function POST(request: Request) {
     const { user, error } = await verifyAuth(request);

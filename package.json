@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "coverage": "vitest run --coverage",
+    "coverage:open": "open coverage/index.html",
     "test:e2e": "playwright test"
   },
   "dependencies": {

@@ -3,6 +3,8 @@ import { adminDb } from '@/lib/firebase-admin';
 import { verifyAuth, errorResponse, successResponse } from '@/lib/api-helpers';
 import { FieldValue } from 'firebase-admin/firestore';
 
+/** @fileoverview POST /api/v1/plans/[planId]/semesters/[semId]/courses — Authenticated endpoint for adding a course to a semester. */
+
 /**
  * @swagger
  * /api/v1/plans/{planId}/semesters/{semId}/courses:
@@ -43,6 +45,13 @@ import { FieldValue } from 'firebase-admin/firestore';
  *         description: Plan or Semester not found
  *       401:
  *         description: Unauthorized
+ */
+/**
+ * Appends a course (with optional CRN) to the semester's courses array. Requires { courseId: string, crn?: string }.
+ *
+ * @param request - Incoming Next.js Request object
+ * @param context - Route context with params (planId, semId)
+ * @returns NextResponse — 200 on success, 400 if courseId is missing, 401 if unauthenticated, 404 if plan or semester not found, 500 on error
  */
 export async function POST(
     request: NextRequest,

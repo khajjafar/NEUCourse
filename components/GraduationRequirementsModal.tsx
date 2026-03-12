@@ -1,5 +1,10 @@
 'use client';
 
+/**
+ * @fileoverview Modal for managing the user's graduation requirements (CRUD). Maintains a local
+ * copy of requirements until saved to avoid partial writes.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon, TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { GraduationRequirement } from '@/hooks/usePlans';
@@ -11,6 +16,16 @@ interface GraduationRequirementsModalProps {
     updateRequirements: (requirements: GraduationRequirement[]) => Promise<void>;
 }
 
+/**
+ * Modal that lets users add and remove graduation requirement categories, then persists them
+ * via updateRequirements.
+ * @param props - Component props
+ * @param props.isOpen - Whether the modal is visible
+ * @param props.onClose - Callback to dismiss the modal
+ * @param props.requirements - Current array of graduation requirements from the plan
+ * @param props.updateRequirements - Async mutation to persist the updated requirements list
+ * @returns The modal dialog, or null when closed
+ */
 export default function GraduationRequirementsModal({
     isOpen,
     onClose,

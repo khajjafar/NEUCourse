@@ -1,5 +1,13 @@
 "use client";
 
+/**
+ * @fileoverview Firebase authentication context and hook.
+ *
+ * Provides the AuthProvider component (wrap the app root with this) and the
+ * useAuth hook for accessing the current user, loading state, and logout helper.
+ * The Firebase JWT is never stored outside React context — no localStorage/cookies.
+ */
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import {
     onAuthStateChanged,
@@ -23,6 +31,13 @@ const AuthContext = createContext<AuthContextType>({
     logout: async () => { },
 });
 
+/**
+ * Provides Firebase auth state to the component tree.
+ * Sets persistence to browserLocalPersistence and listens for auth state changes.
+ *
+ * @param children - React subtree that needs access to auth context
+ * @returns Context provider with current user, loading state, and logout function
+ */
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
@@ -59,4 +74,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 };
 
+/**
+ * Returns the current auth context: user, loading state, and logout function.
+ * Must be used inside an AuthProvider.
+ *
+ * @returns AuthContextType with user (Firebase User or null), loading boolean, and logout function
+ */
 export const useAuth = () => useContext(AuthContext);

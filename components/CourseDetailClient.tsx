@@ -1,5 +1,11 @@
 'use client';
 
+/**
+ * @fileoverview Client-side course detail view. Can render as a full page or as an intercepting
+ * modal (isModal=true). Fetches course data via useSingleCourse, supports Esc-to-close and
+ * click-outside-to-close in modal mode.
+ */
+
 import { useSingleCourse } from "@/hooks/useSingleCourse";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -7,12 +13,21 @@ import Link from "next/link";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import AddToPlanDropdown from "./AddToPlanDropdown";
 
-// Helper to inject a space into compact IDs (e.g. "ACC2100" -> "ACC 2100")
+/**
+ * Injects a space between the subject letters and course number (e.g. 'CS3500' → 'CS 3500').
+ * @param id - Compact course ID string without a space separator
+ * @returns The formatted course ID with a space between subject and number
+ */
 const formatCourseId = (id: string) => {
     return id.replace(/^([A-Za-z]+)(\d+)/, '$1 $2');
 };
 
-// Helper to split days from times (e.g. "MTWTF6:00pm - 9:20pm" -> "MTWTF 6:00pm - 9:20pm")
+/**
+ * Splits day abbreviations from the time portion of a compact meeting time string.
+ * @param timeStr - Raw meeting time string such as "MTWTF6:00pm - 9:20pm"
+ * @returns The string with a space inserted between day abbreviations and the time, e.g.
+ *   "MTWTF 6:00pm - 9:20pm"
+ */
 const formatMeetingTime = (timeStr: string) => {
     return timeStr.replace(/^([A-Za-z]+)(\d)/, '$1 $2');
 };
@@ -22,6 +37,15 @@ interface CourseDetailClientProps {
     isModal?: boolean;
 }
 
+/**
+ * Renders full course detail including description, prereqs, coreqs, and section table with
+ * Add to Plan buttons.
+ * @param props - Component props
+ * @param props.courseId - The URL-encoded course ID to fetch and display
+ * @param props.isModal - When true, renders as a fixed overlay with backdrop dismiss and
+ *   body scroll lock; defaults to false
+ * @returns The course detail card as a page or intercepting modal
+ */
 export default function CourseDetailClient({ courseId, isModal = false }: CourseDetailClientProps) {
     const { course, loading, error } = useSingleCourse(courseId);
     const router = useRouter();

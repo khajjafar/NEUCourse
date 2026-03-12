@@ -1,5 +1,10 @@
 'use client';
 
+/**
+ * @fileoverview Two-step modal flow for adding a course to a degree plan. Step 1: select a plan.
+ * Step 2: select a semester. Only shown to authenticated users.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePlans } from '@/hooks/usePlans';
@@ -11,6 +16,13 @@ interface AddToPlanDropdownProps {
     crn?: string;
 }
 
+/**
+ * Renders an 'Add to Plan' button that opens a two-step plan/semester selection modal.
+ * @param props - Component props
+ * @param props.courseId - The ID of the course to add
+ * @param props.crn - Optional CRN of the specific section to associate with the course assignment
+ * @returns The button and modal, or null for unauthenticated users
+ */
 export default function AddToPlanDropdown({ courseId, crn }: AddToPlanDropdownProps) {
     const { user } = useAuth();
     const { plans, loading: plansLoading } = usePlans();

@@ -3,6 +3,8 @@ import { adminDb } from '@/lib/firebase-admin';
 import { verifyAuth, errorResponse, successResponse } from '@/lib/api-helpers';
 import { FieldValue } from 'firebase-admin/firestore';
 
+/** @fileoverview DELETE /api/v1/plans/[planId]/semesters/[semId]/courses/[courseId] — Authenticated endpoint for removing a course from a semester. */
+
 /**
  * @swagger
  * /api/v1/plans/{planId}/semesters/{semId}/courses/{courseId}:
@@ -33,6 +35,13 @@ import { FieldValue } from 'firebase-admin/firestore';
  *         description: Plan or Semester not found
  *       401:
  *         description: Unauthorized
+ */
+/**
+ * Removes a course from the semester's courses array by matching courseId (handles both string and CourseAssignment formats).
+ *
+ * @param request - Incoming Next.js Request object
+ * @param context - Route context with params (planId, semId, courseId)
+ * @returns NextResponse — 200 on success, 401 if unauthenticated, 404 if semester not found, 500 on error
  */
 export async function DELETE(
     request: NextRequest,

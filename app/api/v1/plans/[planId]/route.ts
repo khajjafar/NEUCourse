@@ -5,6 +5,8 @@ import { FieldValue } from 'firebase-admin/firestore';
 
 export const dynamic = 'force-dynamic';
 
+/** @fileoverview GET, PUT, and DELETE /api/v1/plans/[planId] — Authenticated endpoints for reading, renaming, and deleting a specific degree plan. */
+
 /**
  * @swagger
  * /api/v1/plans/{planId}:
@@ -23,6 +25,13 @@ export const dynamic = 'force-dynamic';
  *         description: Plan object with semesters array
  *       404:
  *         description: Plan not found
+ */
+/**
+ * Fetches a single plan with its full semesters subcollection.
+ *
+ * @param request - Incoming Next.js Request object
+ * @param context - Route context with params (planId)
+ * @returns NextResponse — 200 on success, 401 if unauthenticated, 404 if plan not found, 500 on error
  */
 export async function GET(
     request: NextRequest,
@@ -87,6 +96,13 @@ export async function GET(
  *       404:
  *         description: Plan not found
  */
+/**
+ * Deletes a plan and all its semesters subcollection documents.
+ *
+ * @param request - Incoming Next.js Request object
+ * @param context - Route context with params (planId)
+ * @returns NextResponse — 200 on success, 401 if unauthenticated, 500 on error
+ */
 export async function DELETE(
     request: NextRequest,
     context: { params: Promise<{ planId: string }> }
@@ -149,6 +165,13 @@ export async function DELETE(
  *         description: Missing or invalid name
  *       404:
  *         description: Plan not found
+ */
+/**
+ * Renames a degree plan. Requires { name: string } in the request body.
+ *
+ * @param request - Incoming Next.js Request object
+ * @param context - Route context with params (planId)
+ * @returns NextResponse — 200 on success, 400 if name is missing or invalid, 401 if unauthenticated, 404 if plan not found, 500 on error
  */
 export async function PUT(
     request: NextRequest,

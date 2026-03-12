@@ -4,6 +4,8 @@ import { verifyAuth, errorResponse, successResponse } from '@/lib/api-helpers';
 
 export const dynamic = 'force-dynamic';
 
+/** @fileoverview GET and PATCH /api/v1/profile — Authenticated endpoints for reading and updating the user's profile (currently: graduation requirements). */
+
 /**
  * @swagger
  * /api/v1/profile:
@@ -16,6 +18,12 @@ export const dynamic = 'force-dynamic';
  *         description: User profile data
  *       401:
  *         description: Unauthorized
+ */
+/**
+ * Returns the authenticated user's profile document from Firestore.
+ *
+ * @param request - Incoming Next.js Request object
+ * @returns NextResponse — 200 with profile data on success, 401 if unauthenticated, 500 on error
  */
 export async function GET(request: Request) {
     const { user, error } = await verifyAuth(request);
@@ -70,6 +78,12 @@ export async function GET(request: Request) {
  *         description: Invalid input
  *       401:
  *         description: Unauthorized
+ */
+/**
+ * Updates the user's profile. Currently supports updating the requirements array.
+ *
+ * @param request - Incoming Next.js Request object
+ * @returns NextResponse — 200 on success, 400 if requirements is not an array, 401 if unauthenticated, 500 on error
  */
 export async function PATCH(request: Request) {
     const { user, error } = await verifyAuth(request);

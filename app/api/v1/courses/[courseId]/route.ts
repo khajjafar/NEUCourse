@@ -20,6 +20,15 @@ import { adminDb } from "@/lib/firebase-admin";
  *       404:
  *         description: Course not found
  */
+/** @fileoverview GET /api/v1/courses/[courseId] — Public endpoint for fetching a single course by ID. No authentication required. */
+
+/**
+ * Fetches a single course document from Firestore by its URL-decoded courseId.
+ *
+ * @param request - Incoming Next.js Request object
+ * @param context - Route context with params (courseId)
+ * @returns NextResponse — 200 on success, 400 if courseId is missing, 404 if not found, 500 on error
+ */
 export async function GET(
     request: NextRequest,
     context: { params: Promise<{ courseId: string }> }

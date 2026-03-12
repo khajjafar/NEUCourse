@@ -1,5 +1,10 @@
 'use client';
 
+/**
+ * @fileoverview Compact course card for use within semester columns in the degree plan builder.
+ * Shows soft prereq and coreq warnings as inline badges — never hard-blocks the student.
+ */
+
 import React from 'react';
 import { useSingleCourse } from '@/hooks/useSingleCourse';
 import Link from 'next/link';
@@ -16,6 +21,20 @@ interface CourseMiniCardProps {
     onUpdateAssignment?: (requirementId?: string) => void;
 }
 
+/**
+ * Renders a compact course card with missing prereq/coreq warning badges and optional
+ * requirement assignment dropdown.
+ * @param props - Component props
+ * @param props.courseId - The Firestore course ID to display
+ * @param props.crn - Optional CRN of the section selected for this course
+ * @param props.onRemove - Optional callback to remove the course from the semester
+ * @param props.allPlanCourses - All courses in the plan with their semester order, used for prereq/coreq validation
+ * @param props.currentSemesterOrder - The order index of the semester this card lives in
+ * @param props.requirements - Graduation requirements available for assignment
+ * @param props.currentRequirementId - The requirement ID currently assigned to this course
+ * @param props.onUpdateAssignment - Callback to update the requirement assignment for this course
+ * @returns A compact card with course info, soft warnings, and an optional requirement selector
+ */
 export default function CourseMiniCard({ courseId, crn, onRemove, allPlanCourses, currentSemesterOrder, requirements, currentRequirementId, onUpdateAssignment }: CourseMiniCardProps) {
     const { course, loading, error } = useSingleCourse(courseId);
 

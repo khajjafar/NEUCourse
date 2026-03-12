@@ -1,11 +1,20 @@
 'use client';
 
+/**
+ * @fileoverview Modal for bulk-adding an entire semester's course schedule to the calendar.
+ * Only shows courses that have a specific CRN pre-selected in the plan — courses without a
+ * section are excluded.
+ */
+
 import { useState, useEffect } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { AddToCalendarButton } from './AddToCalendarButton';
 import { fetchCourseCached } from '@/hooks/useSingleCourse';
 import { CourseData } from '@/hooks/useCourseSearch';
 
+/**
+ * A semester as passed to the modal, containing the course/CRN assignment data.
+ */
 export interface CalendarSemester {
     id: string;
     name: string;
@@ -19,6 +28,15 @@ interface AddScheduleToCalendarModalProps {
     semesters: CalendarSemester[];
 }
 
+/**
+ * Renders a semester selector and a list of schedulable courses, each with an
+ * AddToCalendarButton.
+ * @param props - Component props
+ * @param props.isOpen - Whether the modal is visible
+ * @param props.onClose - Callback to dismiss the modal
+ * @param props.semesters - The plan's semesters with their course/CRN assignments
+ * @returns The modal dialog, or null when closed
+ */
 export default function AddScheduleToCalendarModal({
     isOpen,
     onClose,

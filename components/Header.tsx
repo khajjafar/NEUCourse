@@ -1,10 +1,19 @@
 "use client";
 
+/**
+ * @fileoverview Sticky top navigation header with site logo, nav links, and auth actions.
+ * Hidden on landing, login, and register pages.
+ */
+
 import React from "react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { usePathname } from "next/navigation";
 
+/**
+ * Renders the app navigation bar. Returns null on auth pages to keep forms clean.
+ * @returns The sticky header element, or null when on the landing, login, or register page
+ */
 export default function Header() {
     const { user, logout } = useAuth();
     const pathname = usePathname();

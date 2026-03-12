@@ -1,5 +1,11 @@
 'use client';
 
+/**
+ * @fileoverview Button component that creates calendar events from a course section's parsed
+ * meeting times. Uses fetchCourseCached to avoid redundant API calls. Only works for sections
+ * with non-TBA meeting times.
+ */
+
 import { useState } from 'react';
 import { CalendarIcon } from '@heroicons/react/24/outline';
 import { fetchCourseCached } from '@/hooks/useSingleCourse';
@@ -17,6 +23,12 @@ const DAY_TO_INDEX: Record<string, 0 | 1 | 2 | 3 | 4 | 5 | 6> = {
     Saturday: 6,
 };
 
+/**
+ * Returns the next occurrence of a given weekday at a given 24-hour time.
+ * @param dayName - Full weekday name (e.g. "Monday", "Friday")
+ * @param time24h - Time in "HH:MM" 24-hour format
+ * @returns Date object for the upcoming occurrence of that day and time
+ */
 function getNextDateForDayAndTime(dayName: string, time24h: string): Date {
     const [hours, minutes] = time24h.split(':').map(Number);
     const now = new Date();
@@ -32,6 +44,15 @@ interface AddToCalendarButtonProps {
     courseName: string;
 }
 
+/**
+ * Creates one calendar event per meeting day for the specified course section. Shows
+ * success/error inline.
+ * @param props - Component props
+ * @param props.courseId - The Firestore course ID used to fetch section details
+ * @param props.crn - The CRN identifying the specific section to schedule
+ * @param props.courseName - Display name used as the calendar event title
+ * @returns A button with inline success/error feedback
+ */
 export function AddToCalendarButton({ courseId, crn, courseName }: AddToCalendarButtonProps) {
     const { addEvent } = useEvents();
     const [isLoading, setIsLoading] = useState(false);

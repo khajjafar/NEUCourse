@@ -1,3 +1,14 @@
+/**
+ * @fileoverview Centralized OpenAPI 3.0 specification for the NEUCourse API.
+ *
+ * Exports the full Swagger/OpenAPI document consumed by /app/api-docs/page.tsx
+ * (Swagger UI) and /app/api/swagger/route.ts (JSON endpoint). Defines all
+ * schemas, security schemes, and path/operation objects for every endpoint
+ * under /api/v1/.
+ *
+ * Update this file whenever a new endpoint or response shape is added.
+ */
+
 import { OpenAPIV3 } from 'openapi-types';
 
 const errorSchema: OpenAPIV3.SchemaObject = {
@@ -28,6 +39,7 @@ const serverErrorResponse: OpenAPIV3.ResponseObject = {
   content: { 'application/json': { schema: errorSchema } },
 };
 
+/** Complete OpenAPI 3.0.0 document describing all NEUCourse API endpoints and schemas. */
 export const swaggerSpec: OpenAPIV3.Document = {
   openapi: '3.0.0',
   info: {
