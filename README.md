@@ -16,22 +16,6 @@ A degree planning and scheduling web app for Northeastern University students. S
 
 ---
 
-## Screenshots
-
-| Login / Register | Dashboard |
-|---|---|
-| ![Login](docs/wireframes/Screen1_LoginRegister.png) | ![Dashboard](docs/wireframes/Screen2_Dashboard.png) |
-
-| Course Search | Degree Plan Builder |
-|---|---|
-| ![Course Search](docs/wireframes/Screen3_CourseSearch.png) | ![Plan Builder](docs/wireframes/Screen5_DegreePlanBuilder.png) |
-
-| Plan Details | Weekly Calendar |
-|---|---|
-| ![Plan Details](docs/wireframes/Screen4_PlanDetails.png) | ![Calendar](docs/wireframes/Screen6_Calendar.png) |
-
----
-
 ## Tech Stack
 
 | Concern | Tool | Version |
